@@ -4,7 +4,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B20D1FFE-6D5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{409CDE2B-8E95-43CA-8C89-1020F58797B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KurzSharp.Attributes", "src\KurzSharp.Attributes\KurzSharp.Attributes.csproj", "{1142DA51-8AF3-452F-926B-0F642515DCC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KurzSharp.EmbeddedSource", "src\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj", "{1142DA51-8AF3-452F-926B-0F642515DCC6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KurzSharp", "src\KurzSharp\KurzSharp.csproj", "{3EAD8713-DB40-4008-88EF-3C1240C42D72}"
 EndProject

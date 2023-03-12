@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFrameworks>NET7;.netstandard2.0</TargetFrameworks>
         <LangVersion>11</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -18,9 +18,19 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="..\KurzSharp.EmbeddedSource\RestApiAttribute.cs">
+          <Link>Templates\Attributes\RestApiAttribute.cs</Link>
+        </EmbeddedResource>
         <EmbeddedResource Include="Templates\**\*.cs" />
         <EmbeddedResource Include="..\KurzSharp.Attributes\*.cs" Link="Templates\Attributes\%(Filename)%(Extension)" />
         <None Include="$(OutputPath)\Microsoft.AspNetCore.Mvc.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
-        <Compile Include="..\KurzSharp.Attributes\*.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' != '.netstandard2.0'">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" />
     </ItemGroup>
 </Project>
