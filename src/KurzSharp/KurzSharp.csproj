@@ -5,16 +5,25 @@
         <LangVersion>11</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Version>1.0.0</Version>
+        <Authors>Shafiq Ahmad</Authors>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5"  PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' != '.netstandard2.0'">
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\\.netstandard2.0\\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\\.netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\\.netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,14 +32,10 @@
         </EmbeddedResource>
         <EmbeddedResource Include="Templates\**\*.cs" />
         <EmbeddedResource Include="..\KurzSharp.Attributes\*.cs" Link="Templates\Attributes\%(Filename)%(Extension)" />
-        <None Include="$(OutputPath)\Microsoft.AspNetCore.Mvc.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" />
+      <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" PrivateAssets="All"  />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != '.netstandard2.0'">
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" />
-    </ItemGroup>
 </Project>

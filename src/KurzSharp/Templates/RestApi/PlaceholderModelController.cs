@@ -57,7 +57,7 @@ public class PlaceholderModelController : ControllerBase
         }
         catch (Exception e)
         {
-            _logger.LogError("Error while deleting {Entity}, {Message}", placeholderModel, e.Message);
+            _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModel, e.Message);
 
             return BadRequest($"Error while trying to delete {placeholderModel}");
         }

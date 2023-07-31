@@ -8,7 +8,7 @@ var services = builder.Services;
 services.AddControllers();
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
-services.AddKurzSharp(optionsBuilder => optionsBuilder.UseNpgsql(configuration.GetConnectionString("ProductsDb")));
+services.AddKurzSharp(optionsBuilder => optionsBuilder.UseInMemoryDatabase("ProductsDb"));
 
 var app = builder.Build();
 
