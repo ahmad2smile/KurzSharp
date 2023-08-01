@@ -2,8 +2,8 @@ name: NuGet Publish
 
 on:
   push:
-    branches:
-      - main # Default release branch, may also be named 'master' or 'develop'
+    tags:
+      - '*'
 
 jobs:
   nuget-publish:
