@@ -9,6 +9,8 @@
         <Authors>Shafiq Ahmad</Authors>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
@@ -41,6 +43,7 @@
 
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>
