@@ -1,5 +1,7 @@
 # Kurz Sharp
 
+[![NuGet Publish](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml/badge.svg?branch=master&event=release)](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml)
+
 Easily scaffold API for non-production scenarios.
 
 ## Usage
@@ -15,6 +17,14 @@ public class Product
 ```
 
 2. Configure `KurzSharp`
+
+For In-Memory:
+
+```csharp
+services.AddKurzSharp(o => o.UseInMemoryDatabase("ProductsDb"));
+```
+
+For Database (PostgresDb):
 
 ```csharp
 services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("ProductsDb")));
