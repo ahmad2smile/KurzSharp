@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>NET7;.netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;NET7</TargetFrameworks>
         <LangVersion>11</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -17,14 +17,14 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' != '.netstandard2.0'">
+    <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)\\.netstandard2.0\\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        <None Include="$(OutputPath)\\.netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        <None Include="$(OutputPath)\\.netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
+        <None Include="$(OutputPath)\\netstandard2.0\\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\\netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\\netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
     </ItemGroup>
 
     <ItemGroup>
