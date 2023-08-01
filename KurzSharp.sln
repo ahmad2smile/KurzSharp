@@ -16,6 +16,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		LICENSE = LICENSE
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{FA128172-0FE0-4D0A-8164-2CC5776E1953}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{86D61640-0880-4DC1-B0BF-F708B62F7CDD}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\publish.yml = .github\workflows\publish.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +46,7 @@ Global
 		{1142DA51-8AF3-452F-926B-0F642515DCC6} = {B20D1FFE-6D5F-4ACB-B3C3-75E728CBDD25}
 		{3EAD8713-DB40-4008-88EF-3C1240C42D72} = {B20D1FFE-6D5F-4ACB-B3C3-75E728CBDD25}
 		{B462AABC-5162-4BA9-80FF-CC7B65E3266A} = {409CDE2B-8E95-43CA-8C89-1020F58797B6}
+		{FA128172-0FE0-4D0A-8164-2CC5776E1953} = {11C21F93-1996-4A03-A42D-00E44B70C81C}
+		{86D61640-0880-4DC1-B0BF-F708B62F7CDD} = {FA128172-0FE0-4D0A-8164-2CC5776E1953}
 	EndGlobalSection
 EndGlobal
