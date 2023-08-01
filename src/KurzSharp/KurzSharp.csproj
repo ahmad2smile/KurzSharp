@@ -8,6 +8,7 @@
         <Version>1.0.0</Version>
         <Authors>Shafiq Ahmad</Authors>
         <IncludeBuildOutput>false</IncludeBuildOutput>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,6 +37,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" PrivateAssets="All"  />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>
