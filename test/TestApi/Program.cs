@@ -8,7 +8,7 @@ var services = builder.Services;
 services.AddControllers();
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
-services.AddKurzSharp(optionsBuilder => optionsBuilder.UseInMemoryDatabase("ProductsDb"));
+services.AddKurzSharp(o => o.UseInMemoryDatabase("ProductsDb"));
 
 var app = builder.Build();
 
