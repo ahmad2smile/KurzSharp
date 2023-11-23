@@ -1,5 +1,3 @@
-#if NET7_0_OR_GREATER
-
 using System.Net;
 using KurzSharp.Templates.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -82,5 +80,3 @@ public class PlaceholderModelController : ControllerBase
         return Ok(placeholderModel);
     }
 }
-
-#endif

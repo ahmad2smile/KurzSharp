@@ -7,7 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="KurzSharp" Version="1.0.5" />
+<!--        <PackageReference Include="KurzSharp" Version="1.0.8" />-->
+        <PackageReference Include="KurzSharp" Version="1.0.11" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.3">
           <PrivateAssets>all</PrivateAssets>

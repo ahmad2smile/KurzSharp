@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\publish.yml = .github\workflows\publish.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KurzSharp.Templates", "src\KurzSharp.Templates\KurzSharp.Templates.csproj", "{F243F625-1DC8-4C3C-8C4A-344DB7F36E04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 		{B462AABC-5162-4BA9-80FF-CC7B65E3266A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B462AABC-5162-4BA9-80FF-CC7B65E3266A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B462AABC-5162-4BA9-80FF-CC7B65E3266A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F243F625-1DC8-4C3C-8C4A-344DB7F36E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F243F625-1DC8-4C3C-8C4A-344DB7F36E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F243F625-1DC8-4C3C-8C4A-344DB7F36E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F243F625-1DC8-4C3C-8C4A-344DB7F36E04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1142DA51-8AF3-452F-926B-0F642515DCC6} = {B20D1FFE-6D5F-4ACB-B3C3-75E728CBDD25}
@@ -49,5 +55,6 @@ Global
 		{B462AABC-5162-4BA9-80FF-CC7B65E3266A} = {409CDE2B-8E95-43CA-8C89-1020F58797B6}
 		{FA128172-0FE0-4D0A-8164-2CC5776E1953} = {11C21F93-1996-4A03-A42D-00E44B70C81C}
 		{86D61640-0880-4DC1-B0BF-F708B62F7CDD} = {FA128172-0FE0-4D0A-8164-2CC5776E1953}
+		{F243F625-1DC8-4C3C-8C4A-344DB7F36E04} = {B20D1FFE-6D5F-4ACB-B3C3-75E728CBDD25}
 	EndGlobalSection
 EndGlobal

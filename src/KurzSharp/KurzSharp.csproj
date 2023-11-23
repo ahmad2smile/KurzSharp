@@ -2,11 +2,11 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
-        <LangVersion>11</LangVersion>
+        <LangVersion>12</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>1.0.8</Version>
-        <Authors>Shafiq Ahmad</Authors>
+        <Version>1.0.11</Version>
+        <Authors>Ahmad</Authors>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -37,12 +37,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" PrivateAssets="All"  />
+        <EmbeddedResource Include="..\KurzSharp.Templates\*.cs" Link="Templates\%(Filename)%(Extension)" />
+        <Compile Include="..\KurzSharp.Templates\PlaceholderModel.cs" Link="Templates\PlaceholderModel.cs" />
+        <EmbeddedResource Include="..\KurzSharp.Templates\Database\*.cs" Link="Templates\Database\%(Filename)%(Extension)" />
+        <EmbeddedResource Include="..\KurzSharp.Templates\RestApi\*.cs" Link="Templates\RestApi\%(Filename)%(Extension)" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+        <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" PrivateAssets="All" />
     </ItemGroup>
 
 </Project>
