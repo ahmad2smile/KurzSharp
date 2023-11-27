@@ -36,3 +36,32 @@ services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("Produc
 🎉 You API is ready, Run project and open Swagger Docs.
 
 For more information please check `test/TestApi`
+
+### Features:
+
+- Hook into process to control how/what information on Entity is modified/observed with following hooks, just implement desired hook on your model and it would run before the related operation executed:
+    - `IBeforeReadHook`
+    - `IBeforeCreateHook`
+    - `IBeforeDeleteHook`
+    - `IBeforeUpdateHook`
+
+Ex:
+
+```csharp
+
+[RestApi]
+public class Product : IBeforeCreateHook
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+    public void OnBeforeCreate()
+    {
+        // Override Id coming from Create payload
+        Id = Guid.NewGuid();
+        Console.WriteLine("Product created");
+        Console.WriteLine(Id.ToString());
+    }
+}
+```

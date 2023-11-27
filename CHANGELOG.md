@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added ability to hook into process before changes happen to Entity with following interfaces:
+  - `IBeforeReadHook`
+  - `IBeforeCreateHook`
+  - `IBeforeDeleteHook`
+  - `IBeforeUpdateHook`
+
 ## [1.0.8] - 2023-11-22
 
 ### Internal
 
-- Upgrade to .NET 8 
+- Upgrade to .NET 8

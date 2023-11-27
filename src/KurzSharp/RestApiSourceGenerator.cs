@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using KurzSharp.Utils;
 using Microsoft.CodeAnalysis;
@@ -50,14 +51,15 @@ public class RestApiSourceGenerator : IIncrementalGenerator
 
             typesAndNamespaces.Add((typeName, typeNamespace));
 
-            AddController(typeName, typeNamespace, ctx);
+            AddController(typeName, typeNamespace, syntax, ctx);
         }
 
         AddDbContext(typesAndNamespaces, ctx);
         AddSetupExtension(typesAndNamespaces, ctx);
     }
 
-    private static void AddController(string typeName, string typeNamespace, SourceProductionContext ctx)
+    private static void AddController(string typeName, string typeNamespace, ClassDeclarationSyntax syntax,
+        SourceProductionContext ctx)
     {
         var controllerName = $"{typeName}Controller";
         // NOTE: Can't use `nameof` as that would error on NET7 code being in .netstandard 2.0 (Source Gen) Code
@@ -66,7 +68,8 @@ public class RestApiSourceGenerator : IIncrementalGenerator
         var controllerSource =
             TemplatesUtils.GetTemplateFileContent(RestApiTemplatesNamespace, placeholderControllerName);
 
-        var source = controllerSource.ReplacePlaceholderType(typeName).FixupNamespaces().AddUsing(typeNamespace);
+        var source = controllerSource.InjectHooks(syntax).ReplacePlaceholderType(typeName).FixupNamespaces()
+            .AddUsing(typeNamespace);
 
         ctx.AddSource($"{controllerName}.g.cs", SourceText.From(source, Encoding.UTF8));
     }

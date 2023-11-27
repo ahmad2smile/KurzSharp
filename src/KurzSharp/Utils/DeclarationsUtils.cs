@@ -31,4 +31,9 @@ public static class DeclarationsUtils
                 return (syntax, attribute);
             });
     }
+    
+    public static bool HasInterface(this ClassDeclarationSyntax source, string interfaceName)
+    {
+        return source.BaseList?.Types.Any(baseType => baseType.ToString().Contains(interfaceName)) ?? false;
+    }
 }

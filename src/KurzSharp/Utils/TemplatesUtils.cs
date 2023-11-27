@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace KurzSharp.Utils;
 
@@ -38,6 +39,39 @@ public static class TemplatesUtils
     private const string TemplateNamespace = "Templates";
 
     /// <summary>
+    /// Injects hooks if given interface is implemented
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="syntax">Syntax Declaration to use to find interface implementation</param>
+    /// <returns></returns>
+    public static string InjectHooks(this string source, ClassDeclarationSyntax syntax)
+    {
+        var modifiedSource = source;
+
+        if (syntax.HasInterface(nameof(IBeforeCreateHook)))
+        {
+            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeCreate();", "placeholderModel.OnBeforeCreate();");
+        }
+
+        if (syntax.HasInterface(nameof(IBeforeDeleteHook)))
+        {
+            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeDelete();", "placeholderModel.OnBeforeDelete();");
+        }
+
+        if (syntax.HasInterface(nameof(IBeforeReadHook)))
+        {
+            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeRead();", "placeholderModel.OnBeforeRead();");
+        }
+
+        if (syntax.HasInterface(nameof(IBeforeUpdateHook)))
+        {
+            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeUpdate();", "placeholderModel.OnBeforeUpdate();");
+        }
+
+        return modifiedSource;
+    }
+
+    /// <summary>
     /// Replace `PlaceholderModel` references in Code with actual type
     /// </summary>
     /// <param name="source"></param>
@@ -71,7 +105,7 @@ public static class TemplatesUtils
     {
         return source.AddUsing(new[] { typeNamespace });
     }
-    
+
     /// <summary>
     /// Add Using Statements for given namespaces if non-existent
     /// </summary>

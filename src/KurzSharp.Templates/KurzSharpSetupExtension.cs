@@ -4,6 +4,8 @@ using KurzSharp.Templates.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+// NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
+// but isn't linked as 'Compiled' due to not being support for netstandard2.0
 namespace KurzSharp.Templates;
 
 public static class KurzSharpSetupExtension

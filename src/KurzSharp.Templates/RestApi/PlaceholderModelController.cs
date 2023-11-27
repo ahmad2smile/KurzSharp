@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+// NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
+// but isn't linked as 'Compiled' due to not being support for netstandard2.0
 namespace KurzSharp.Templates.RestApi;
 
 [ApiController]
@@ -24,7 +26,11 @@ public class PlaceholderModelController : ControllerBase
     {
         var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken: cancellationToken);
 
-        return Ok(allPlaceholderModels);
+        return Ok(allPlaceholderModels.Select((placeholderModel) =>
+        {
+            // placeholderModel.OnBeforeRead();
+            return placeholderModel;
+        }));
     }
 
     [HttpPost]
@@ -38,6 +44,8 @@ public class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        // placeholderModel.OnBeforeCreate();
+
         var result = await _context.PlaceholderModels.AddAsync(placeholderModel, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -50,6 +58,8 @@ public class PlaceholderModelController : ControllerBase
     {
         try
         {
+            // placeholderModel.OnBeforeDelete();
+
             _context.Remove(placeholderModel);
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -73,6 +83,8 @@ public class PlaceholderModelController : ControllerBase
 
             return BadRequest(ModelState);
         }
+
+        // placeholderModel.OnBeforeUpdate();
 
         _context.PlaceholderModels.Update(placeholderModel);
         await _context.SaveChangesAsync(cancellationToken);
