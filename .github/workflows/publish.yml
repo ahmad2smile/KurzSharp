@@ -21,7 +21,6 @@ jobs:
           dotnet-version: '8.x'
         env:
           NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
-          PROJECT_DIR: "src/KurzSharp"
 
       - name: Install dependencies
         run: dotnet restore
@@ -41,8 +40,9 @@ jobs:
         if: ${{ always() }}
 
       - name: Create the package
-        run: dotnet pack --configuration Release ${{PROJECT_DIR}}
+        run: dotnet pack --configuration Release src/KurzSharp
 
       - name: Publish the package
         run: |
-          dotnet nuget push "${{PROJECT_DIR}}/bin/Release/*.nupkg" --skip-duplicate --no-symbols true
+          dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
+          dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/ahmad2smile/index.json
