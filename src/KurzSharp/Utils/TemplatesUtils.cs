@@ -1,10 +1,18 @@
 using System.Text;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using KurzSharp.Templates;
 
 namespace KurzSharp.Utils;
 
 public static class TemplatesUtils
 {
+    public const string PlaceholderTypeName = nameof(PlaceholderModel);
+    public const string PlaceholderDtoTypeName = nameof(PlaceholderModelDto);
+
+    private static readonly string PlaceholderTypeCamelCase =
+        PlaceholderTypeName.Substring(0, 1).ToLowerInvariant() + PlaceholderTypeName.Substring(1);
+
+    private const string TemplateNamespace = "Templates";
+
     public static string GetTemplateFileContent(string fileNamespace, string fileName)
     {
         // NOTE:
@@ -31,46 +39,6 @@ public static class TemplatesUtils
         return fileContent;
     }
 
-    private const string PlaceholderTypeName = nameof(PlaceholderModel);
-
-    private static readonly string PlaceholderTypeCamelCase =
-        PlaceholderTypeName.Substring(0, 1).ToLowerInvariant() + PlaceholderTypeName.Substring(1);
-
-    private const string TemplateNamespace = "Templates";
-
-    /// <summary>
-    /// Injects hooks if given interface is implemented
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="syntax">Syntax Declaration to use to find interface implementation</param>
-    /// <returns></returns>
-    public static string InjectHooks(this string source, ClassDeclarationSyntax syntax)
-    {
-        var modifiedSource = source;
-
-        if (syntax.HasInterface(nameof(IBeforeCreateHook)))
-        {
-            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeCreate();", "placeholderModel.OnBeforeCreate();");
-        }
-
-        if (syntax.HasInterface(nameof(IBeforeDeleteHook)))
-        {
-            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeDelete();", "placeholderModel.OnBeforeDelete();");
-        }
-
-        if (syntax.HasInterface(nameof(IBeforeReadHook)))
-        {
-            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeRead();", "placeholderModel.OnBeforeRead();");
-        }
-
-        if (syntax.HasInterface(nameof(IBeforeUpdateHook)))
-        {
-            modifiedSource = modifiedSource.Replace("// placeholderModel.OnBeforeUpdate();", "placeholderModel.OnBeforeUpdate();");
-        }
-
-        return modifiedSource;
-    }
-
     /// <summary>
     /// Replace `PlaceholderModel` references in Code with actual type
     /// </summary>
@@ -92,7 +60,7 @@ public static class TemplatesUtils
     /// <returns></returns>
     public static string FixupNamespaces(this string source)
     {
-        return source.Replace($".{TemplateNamespace}", "");
+        return source.Replace($".{TemplateNamespace}", string.Empty);
     }
 
     /// <summary>

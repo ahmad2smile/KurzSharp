@@ -1,14 +1,12 @@
 using KurzSharp;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
 var services = builder.Services;
 
 services.AddControllers();
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
-services.AddKurzSharp(o => o.UseInMemoryDatabase("ProductsDb"));
+services.AddKurzSharp();
 
 var app = builder.Build();
 

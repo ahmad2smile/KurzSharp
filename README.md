@@ -9,25 +9,23 @@ Easily scaffold API for non-production scenarios.
 
 ## Usage
 
-1. Create any model and add relevant Attribute for ex: `RestApi`
+1. Create any model with a `partial class` and add relevant Attribute for ex: `RestApi`
 
 ```csharp
 [RestApi]
-public class Product
+public partial class Product
 {
     public Guid Id { get; set; }
 }
 ```
 
-2. Configure `KurzSharp`
-
-For In-Memory:
+2. Configure `KurzSharp` by default Data is stored in Memory with Entity Framework `UseInMemoryDatabase`
 
 ```csharp
-services.AddKurzSharp(o => o.UseInMemoryDatabase("ProductsDb"));
+services.AddKurzSharp();
 ```
 
-For Database (PostgresDb):
+For Database add relavent Db package for Entity Framework and configure `KurzSharp` similar way to Entity Framework config. (ex: PostgresDb):
 
 ```csharp
 services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("ProductsDb")));
@@ -39,29 +37,38 @@ For more information please check `test/TestApi`
 
 ### Features:
 
-- Hook into process to control how/what information on Entity is modified/observed with following hooks, just implement desired hook on your model and it would run before the related operation executed:
-    - `IBeforeReadHook`
-    - `IBeforeCreateHook`
-    - `IBeforeDeleteHook`
-    - `IBeforeUpdateHook`
+- Hook into process to control how/what information on Entity is modified/observed with following hooks. Hook
+  automatically attached the Model, just `override` the required ones.
+    - `OnBeforeCreate`
+    - `OnBeforeAllRead`
+    - `OnBeforeRead`
+    - `OnBeforeUpdate`
+    - `OnBeforeDelete`
 
 Ex:
 
 ```csharp
 
 [RestApi]
-public class Product : IBeforeCreateHook
+public partial class Product
 {
+    
+    private readonly ILogger<Product> _logger;
+
+    public Product(ILogger<Product> logger)
+    {
+        _logger = logger;
+    }
+
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 
-    public void OnBeforeCreate()
+    public override ProductDto OnBeforeCreate(ProductDto dto)
     {
-        // Override Id coming from Create payload
-        Id = Guid.NewGuid();
-        Console.WriteLine("Product created");
-        Console.WriteLine(Id.ToString());
+        _logger.LogInformation("DI is working...");
+
+        return dto;
     }
 }
 ```

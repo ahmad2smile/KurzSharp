@@ -1,8 +1,12 @@
 using System.Net;
 using KurzSharp.Templates.Database;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+
+
+#if NET5_0_OR_GREATER
+using Microsoft.EntityFrameworkCore;
+#endif
 
 // NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
 // but isn't linked as 'Compiled' due to not being support for netstandard2.0
@@ -14,27 +18,34 @@ public class PlaceholderModelController : ControllerBase
 {
     private readonly ILogger<PlaceholderModelController> _logger;
     private readonly KurzSharpDbContext _context;
+    private readonly PlaceholderModel _model;
 
-    public PlaceholderModelController(ILogger<PlaceholderModelController> logger, KurzSharpDbContext context)
+    public PlaceholderModelController(ILogger<PlaceholderModelController> logger, KurzSharpDbContext context,
+        PlaceholderModel model)
     {
         _logger = logger;
         _context = context;
+        _model = model;
     }
 
+#if NET5_0_OR_GREATER
     [HttpGet]
     public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken)
     {
-        var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken: cancellationToken);
+        var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken);
 
-        return Ok(allPlaceholderModels.Select((placeholderModel) =>
+        var dtos = _model.OnBeforeAllRead(allPlaceholderModels);
+
+        return Ok(dtos.Select(placeholderModel =>
         {
-            // placeholderModel.OnBeforeRead();
-            return placeholderModel;
-        }));
+            var dto = _model.OnBeforeRead(placeholderModel);
+
+            return dto;
+        }).ToList());
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddPlaceholderModel(PlaceholderModel placeholderModel,
+    public async Task<IActionResult> AddPlaceholderModel([FromBody] PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -44,37 +55,37 @@ public class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        // placeholderModel.OnBeforeCreate();
+        var dto = _model.OnBeforeCreate(placeholderModelDto);
 
-        var result = await _context.PlaceholderModels.AddAsync(placeholderModel, cancellationToken);
+        var result = await _context.PlaceholderModels.AddAsync(dto, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         return StatusCode((int)HttpStatusCode.Created, result.Entity);
     }
 
     [HttpDelete]
-    public async Task<IActionResult> DeletePlaceholderModel(PlaceholderModel placeholderModel,
+    public async Task<IActionResult> DeletePlaceholderModel([FromBody] PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
         try
         {
-            // placeholderModel.OnBeforeDelete();
+            var dto = _model.OnBeforeDelete(placeholderModelDto);
 
-            _context.Remove(placeholderModel);
+            _context.Remove(dto);
             await _context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModel, e.Message);
+            _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModelDto, e.Message);
 
-            return BadRequest($"Error while trying to delete {placeholderModel}");
+            return BadRequest($"Error while trying to delete {placeholderModelDto}");
         }
 
-        return Ok(placeholderModel);
+        return Ok(placeholderModelDto);
     }
 
     [HttpPut]
-    public async Task<IActionResult> UpdatePlaceholderModel(PlaceholderModel placeholderModel,
+    public async Task<IActionResult> UpdatePlaceholderModel([FromBody] PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -84,11 +95,13 @@ public class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        // placeholderModel.OnBeforeUpdate();
+        var dto = _model.OnBeforeUpdate(placeholderModelDto);
 
-        _context.PlaceholderModels.Update(placeholderModel);
+        _context.PlaceholderModels.Update(dto);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Ok(placeholderModel);
+        return Ok(placeholderModelDto);
     }
+
+#endif
 }
