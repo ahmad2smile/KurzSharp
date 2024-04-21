@@ -1,4 +1,11 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/a050313/.nuget/packages/kurzsharp/1.0.13/lib/netstandard2.0/KurzSharp.EmbeddedSource.dll" /&gt;
-&lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>
+&lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d28d988a_002D507b_002D4d12_002D98bb_002D306e8ad13446/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RestClientTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests_Empty_GetAll&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests_Multiple_Add&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

@@ -8,6 +8,9 @@ on:
 jobs:
   nuget-publish:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Checkout
@@ -18,12 +21,28 @@ jobs:
           dotnet-version: '8.x'
         env:
           NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
+          PROJECT_DIR: "src/KurzSharp"
+
       - name: Install dependencies
         run: dotnet restore
 
-      - name: Publish KurzSharp
+      - name: Build
+        run: dotnet build
+
+      - name: Test with dotnet
+        run: dotnet test --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}"
+
+      - name: Upload dotnet test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-results-${{ matrix.dotnet-version }}
+          path: TestResults-${{ matrix.dotnet-version }}
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
+      - name: Create the package
+        run: dotnet pack --configuration Release ${{PROJECT_DIR}}
+
+      - name: Publish the package
         run: |
-          mkdir __out
-          dotnet pack src/KurzSharp -c Release -o __out --no-restore
-          dotnet nuget push "./__out/*.nupkg" --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
-          rm -rf __out
+          dotnet nuget push "${{PROJECT_DIR}}/bin/Release/*.nupkg" --skip-duplicate --no-symbols true
