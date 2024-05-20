@@ -4,6 +4,7 @@ namespace TestApi.Models;
 
 // NOTE: Can be accessed at `/product`
 [RestApi]
+[GrpcApi]
 public partial class Product
 {
     private readonly ILogger<Product> _logger;

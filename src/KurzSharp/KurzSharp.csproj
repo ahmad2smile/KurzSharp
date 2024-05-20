@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
-        <LangVersion>12</LangVersion>
+        <TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
+        <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Version>2.0.0</Version>
@@ -10,6 +10,7 @@
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,14 +20,24 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" PrivateAssets="all"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.*" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.*" />
+        <PackageReference Include="protobuf-net.Grpc" Version="1.*" />
+        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.*" />
+        <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="7.*" />
+        <PackageReference Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.3.*" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="$(OutputPath)\\netstandard2.0\\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
         <None Include="$(OutputPath)\\netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
         <None Include="$(OutputPath)\\netstandard2.0\\KurzSharp.EmbeddedSource.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true"/>
+        <None Update="Build\Directory.Build.targets">
+          <Pack>true</Pack>
+          <PackagePath>build</PackagePath>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -35,10 +46,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="..\KurzSharp.Templates\*.cs" Link="Templates\%(Filename)%(Extension)"/>
-        <EmbeddedResource Include="..\KurzSharp.Templates\Models\*.cs" Link="Templates\Models\%(Filename)%(Extension)"/>
-        <EmbeddedResource Include="..\KurzSharp.Templates\Database\*.cs" Link="Templates\Database\%(Filename)%(Extension)"/>
-        <EmbeddedResource Include="..\KurzSharp.Templates\RestApi\*.cs" Link="Templates\RestApi\%(Filename)%(Extension)"/>
+        <EmbeddedResource Include="..\KurzSharp.Templates\**\*.cs" Link="Templates\%(RecursiveDir)%(FileName)%(Extension)"/>
+        <EmbeddedResource Include="..\KurzSharp.Templates\**\*.proto" Link="Templates\%(RecursiveDir)%(FileName)%(Extension)"/>
+        <EmbeddedResource Remove="..\KurzSharp.Templates\obj\**"/>
+        <None Remove="$(DefaultItemExcludes)"/>
     </ItemGroup>
 
     <ItemGroup>

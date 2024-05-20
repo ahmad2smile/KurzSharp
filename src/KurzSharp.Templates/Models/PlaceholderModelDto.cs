@@ -1,6 +1,6 @@
-namespace KurzSharp.Templates;
+namespace KurzSharp.Templates.Models;
 
-#if NET5_0_OR_GREATER
+#if NET7_0_OR_GREATER
 public partial class PlaceholderModelDto
 {
     public Guid PlaceholderId { get; set; }

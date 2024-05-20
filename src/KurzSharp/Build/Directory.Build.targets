@@ -1,0 +1,10 @@
+<Project>
+    <PropertyGroup>
+        <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos/Product.proto" GrpcServices="Server" />
+    </ItemGroup>
+
+</Project>

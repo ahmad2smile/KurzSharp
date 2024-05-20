@@ -1,0 +1,11 @@
+<Project>
+    <PropertyGroup>
+        <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
+    </PropertyGroup>
+
+    <Target Name="RenameProtoCsFiles" AfterTargets="PostBuildEvent">
+<!--        <Exec Command="if exist $(ProjectDir)*.proto.cs (powershell.exe -Command &quot;Get-ChildItem -Path '$(ProjectDir)' -Filter '*.proto.cs' | Rename-Item -NewName { $_.BaseName + '.proto' }&quot;) || (sh -c &quot;find $(ProjectDir) -name '*.proto.cs' -exec sh -c 'mv {} {}.proto' \;&quot;)" />-->
+        <Exec Command="if exist $(OutDir)*.proto.cs (powershell.exe -Command &quot;Get-ChildItem -Path '$(OutDir)' -Recurse -Filter '*.proto.cs' | Rename-Item -NewName { $_.BaseName + '.proto' }&quot;) || (sh -c &quot;find $(OutDir) -name '*.proto.cs' -type f -exec sh -c 'mv {} {}.proto' \;&quot;)" />
+    </Target>
+
+</Project>

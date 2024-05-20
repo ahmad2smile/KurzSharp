@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 
-#if NET5_0_OR_GREATER
+#if NET7_0_OR_GREATER
+using KurzSharp.Templates.Models;
 using Microsoft.EntityFrameworkCore;
 #endif
 
@@ -14,6 +15,7 @@ namespace KurzSharp.Templates.RestApi;
 
 [ApiController]
 [Route("[controller]")]
+// NOTE: Leave out class/interface declarations out of if NET7_0_OR_GREATER check to make it easier use in SourceGen with netstandard2.0
 public class PlaceholderModelController : ControllerBase
 {
     private readonly ILogger<PlaceholderModelController> _logger;
@@ -28,7 +30,7 @@ public class PlaceholderModelController : ControllerBase
         _model = model;
     }
 
-#if NET5_0_OR_GREATER
+#if NET7_0_OR_GREATER
     [HttpGet]
     public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken)
     {
