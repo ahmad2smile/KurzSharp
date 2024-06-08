@@ -1,49 +1,39 @@
-using System.Net;
-using KurzSharp.Templates.Database;
+using KurzSharp.Templates.Models;
+using KurzSharp.Templates.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
-
 #if NET7_0_OR_GREATER
-using KurzSharp.Templates.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 #endif
 
 // NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
 // but isn't linked as 'Compiled' due to not being support for netstandard2.0
 namespace KurzSharp.Templates.RestApi;
 
+#if NET7_0_OR_GREATER
+[Tags("PlaceholderModelRest")]
+#endif
 [ApiController]
-[Route("[controller]")]
+[Route($"{nameof(PlaceholderModel)}Rest")]
 // NOTE: Leave out class/interface declarations out of if NET7_0_OR_GREATER check to make it easier use in SourceGen with netstandard2.0
 public class PlaceholderModelController : ControllerBase
 {
     private readonly ILogger<PlaceholderModelController> _logger;
-    private readonly KurzSharpDbContext _context;
-    private readonly PlaceholderModel _model;
+    private readonly IPlaceholderModelService _placeholderModelService;
 
-    public PlaceholderModelController(ILogger<PlaceholderModelController> logger, KurzSharpDbContext context,
-        PlaceholderModel model)
+    public PlaceholderModelController(IPlaceholderModelService placeholderModelService,
+        ILogger<PlaceholderModelController> logger)
     {
         _logger = logger;
-        _context = context;
-        _model = model;
+        _placeholderModelService = placeholderModelService;
     }
+
 
 #if NET7_0_OR_GREATER
     [HttpGet]
     public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken)
     {
-        var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken);
-
-        var dtos = _model.OnBeforeAllRead(allPlaceholderModels);
-
-        return Ok(dtos.Select(placeholderModel =>
-        {
-            var dto = _model.OnBeforeRead(placeholderModel);
-
-            return dto;
-        }).ToList());
+        return Ok(await _placeholderModelService.GetPlaceholderModels(cancellationToken));
     }
 
     [HttpPost]
@@ -57,12 +47,9 @@ public class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var dto = _model.OnBeforeCreate(placeholderModelDto);
+        var result = await _placeholderModelService.AddPlaceholderModel(placeholderModelDto, cancellationToken);
 
-        var result = await _context.PlaceholderModels.AddAsync(dto, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return StatusCode((int)HttpStatusCode.Created, result.Entity);
+        return Created(nameof(GetPlaceholderModels), result);
     }
 
     [HttpDelete]
@@ -71,10 +58,7 @@ public class PlaceholderModelController : ControllerBase
     {
         try
         {
-            var dto = _model.OnBeforeDelete(placeholderModelDto);
-
-            _context.Remove(dto);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _placeholderModelService.DeletePlaceholderModel(placeholderModelDto, cancellationToken);
         }
         catch (Exception e)
         {
@@ -97,10 +81,7 @@ public class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var dto = _model.OnBeforeUpdate(placeholderModelDto);
-
-        _context.PlaceholderModels.Update(dto);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _placeholderModelService.UpdatePlaceholderModel(placeholderModelDto, cancellationToken);
 
         return Ok(placeholderModelDto);
     }

@@ -1,8 +1,9 @@
 #if NET7_0_OR_GREATER
-using Microsoft.OpenApi.Models;
+using ProtoBuf.Grpc.Server;
 using Microsoft.AspNetCore.Routing;
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.Models;
+using KurzSharp.Templates.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ public static class KurzSharpSetupExtension
 #if NET7_0_OR_GREATER
     public static void AddKurzSharp(this IServiceCollection services)
     {
-        AddKurzSharp(services, o => o.UseInMemoryDatabase("ProductsDb"));
+        AddKurzSharp(services, o => o.UseInMemoryDatabase("KurzSharpDb"));
     }
 
     public static void AddKurzSharp(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction)
@@ -27,14 +28,9 @@ public static class KurzSharpSetupExtension
         // NOTE: Register Models with DI so when new instance of those are requested from DI it would automatically provide
         // DI requested Deps in the model constructor ex: Logger.
         services.AddTransient<PlaceholderModel>();
+        services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();
 
-        services.AddGrpc().AddJsonTranscoding();
-        services.AddGrpcSwagger();
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo() { Title = "gRPC transcoding", Version = "v1" });
-            c.CustomSchemaIds(t => t.ToString());
-        });
+        services.AddCodeFirstGrpc();
     }
 
     public static void MapKurzSharpServices(this IEndpointRouteBuilder builder)

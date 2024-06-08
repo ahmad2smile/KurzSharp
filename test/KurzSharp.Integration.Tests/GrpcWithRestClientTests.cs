@@ -3,15 +3,14 @@ using System.Text;
 using System.Text.Json;
 using AutoFixture.Xunit2;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
+using KurzSharp.Integration.Tests.Fixtures;
 using TestApi.Models;
 
 namespace KurzSharp.Integration.Tests;
 
-public class RestClientTests
+public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixture<TestApiServerFixture>
 {
-    private readonly WebApplicationFactory<Program> _factory = new();
-    private const string BaseUrl = $"/{nameof(Product)}Rest";
+    private const string BaseUrl = $"/{nameof(Product)}Grpc";
 
     [Theory, AutoData]
     public async Task Operations(List<ProductDto> d, List<ProductDto> updatedData)
@@ -28,7 +27,7 @@ public class RestClientTests
             data.Add(updatedData[data.Count - 1]);
         }
 
-        var client = _factory.CreateClient();
+        var client = factory.CreateClient();
 
         // INSERT
         foreach (var dto in data)
@@ -55,21 +54,9 @@ public class RestClientTests
 
         var updatedResults = await GetAll();
 
-        updatedResults.Select(i => i.Id).Should().Contain(dataIds);
+        updatedResults.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // DELETE
-        foreach (var dto in updatedResults)
-        {
-            var request = new HttpRequestMessage
-            {
-                Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"),
-                Method = HttpMethod.Delete,
-                RequestUri = new Uri(client.BaseAddress!, BaseUrl)
-            };
-
-            await client.SendAsync(request);
-        }
-
         foreach (var dto in data)
         {
             var request = new HttpRequestMessage
@@ -89,7 +76,7 @@ public class RestClientTests
 
     private async Task<IList<ProductDto>?> GetAll()
     {
-        var client = _factory.CreateClient();
+        var client = factory.CreateClient();
 
         var response = await client.GetAsync(BaseUrl);
 

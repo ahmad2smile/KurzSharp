@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Text;
-using KurzSharp.GrpcApi;
 using KurzSharp.Templates;
 using KurzSharp.Utils;
 using Microsoft.CodeAnalysis;
@@ -10,14 +9,14 @@ using KurzSharp.Templates.RestApi;
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.GrpcApi;
 using KurzSharp.Templates.Models;
+using KurzSharp.Templates.Services;
 
 namespace KurzSharp;
 
 [Generator]
 public class RestApiSourceGenerator : IIncrementalGenerator
 {
-    private const string TemplatesNamespace = "KurzSharp.Templates";
-    private readonly Dictionary<string, string> _protoSources = new Dictionary<string, string>();
+    private readonly Dictionary<string, string> _protoSources = new();
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -28,7 +27,7 @@ public class RestApiSourceGenerator : IIncrementalGenerator
         var projectDirProvider = context.AnalyzerConfigOptionsProvider
             .Select(static (provider, _) =>
             {
-                provider.GlobalOptions.TryGetValue("build_property.projectdir", out string? projectDirectory);
+                provider.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDirectory);
 
                 return projectDirectory;
             });
@@ -80,12 +79,39 @@ public class RestApiSourceGenerator : IIncrementalGenerator
             .ToImmutableHashSet()
             .ToList();
 
+        AddServices(modelSourceInfos.ToList(), ctx);
         AddController(modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Rest)).ToList(), ctx);
         AddGrpc(modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Grpc)).ToList().ToList(), ctx);
         AddModelDto(modelSourceInfos.ToList(), ctx);
         AddPartialModel(modelSourceInfos.ToList(), ctx);
         AddDbContext(modelSourceInfos.ToList(), ctx);
         AddSetupExtension(modelSourceInfos.ToList(), ctx);
+    }
+
+    private static void AddServices(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
+    {
+        var iServiceSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(IPlaceholderModelService));
+        var serviceSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(PlaceholderModelService));
+
+        foreach (var modelSourceInfo in modelSourceInfos)
+        {
+            var typeName = modelSourceInfo.TypeName;
+            var typeNamespace = modelSourceInfo.TypeNamespace;
+
+            var iService = iServiceSrc.FixupNamespaces(typeNamespace)
+                .ReplacePlaceholderType(typeName)
+                .AddUsing(typeNamespace);
+            var service = serviceSrc.FixupNamespaces(typeNamespace)
+                .ReplacePlaceholderType(typeName)
+                .AddUsing(typeNamespace);
+
+            ctx.AddSource($"I{typeName}Service.g.cs", SourceText.From(iService, Encoding.UTF8));
+            ctx.AddSource($"{typeName}Service.g.cs", SourceText.From(service, Encoding.UTF8));
+        }
+
+        var serviceResultSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(ServiceResult<string>));
+        var serviceResult = serviceResultSrc.FixupNamespaces(modelSourceInfos.First().TypeNamespace);
+        ctx.AddSource($"ServiceResult.g.cs", SourceText.From(serviceResult, Encoding.UTF8));
     }
 
     private static void AddController(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
@@ -106,28 +132,26 @@ public class RestApiSourceGenerator : IIncrementalGenerator
         }
     }
 
-    private void AddGrpc(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
+    private static void AddGrpc(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
-        var protoFile = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(PlaceholderModel), "proto");
+        var iServiceSource = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(IPlaceholderModelGrpcService));
         var serviceSource = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(PlaceholderModelGrpcService));
-        var extSource = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(PlaceholderModelDtoExtensions));
 
         foreach (var modelSourceInfo in modelSourceInfos)
         {
             var typeName = modelSourceInfo.TypeName;
             var typeNamespace = modelSourceInfo.TypeNamespace;
 
-            var protoSrc = protoFile.ReplacePlaceholderType(typeName);
+
+            var iService = iServiceSource.FixupNamespaces(typeNamespace)
+                .ReplacePlaceholderType(typeName)
+                .AddUsing(typeNamespace);
             var service = serviceSource.FixupNamespaces(typeNamespace)
                 .ReplacePlaceholderType(typeName)
                 .AddUsing(typeNamespace);
-            var extension = extSource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
 
-            _protoSources[$"{typeName}.proto"] = protoSrc;
+            ctx.AddSource($"I{typeName}GrpcService.g.cs", SourceText.From(iService, Encoding.UTF8));
             ctx.AddSource($"{typeName}GrpcService.g.cs", SourceText.From(service, Encoding.UTF8));
-            ctx.AddSource($"{typeName}DtoExtensions.g.cs", SourceText.From(extension, Encoding.UTF8));
         }
     }
 
@@ -146,13 +170,15 @@ public class RestApiSourceGenerator : IIncrementalGenerator
                 .ToArray();
 
             var propsDeclarations = string.Join("\n",
-                props.Select(s => $"{s.DeclaredAccessibility.ToString().ToLower()} {s.Type} {s.Name} {{ get; set; }}"));
+                props.Select((s, i) =>
+                    $"[DataMember(Order = {i + 1})]\n{s.DeclaredAccessibility.ToString().ToLower()} {s.Type} {s.Name} {{ get; set; }}"));
 
             var propsMaps = string.Join("\n", props.Select(p => $"model.{p.Name} = {p.Name};"));
 
             var source = TemplatesUtils
                 .GetTemplateFileContent("Models", $"{TemplatesUtils.PlaceholderTypeName}Dto")
                 .FixupNamespaces(typeNamespace)
+                .Replace("[DataMember(Order = 1)]", string.Empty)
                 .Replace("public Guid PlaceholderId { get; set; }", propsDeclarations)
                 .Replace("model.Id = PlaceholderId;", propsMaps)
                 .ReplacePlaceholderType(typeName)
@@ -210,18 +236,26 @@ public class RestApiSourceGenerator : IIncrementalGenerator
 
         var setupExtSource = TemplatesUtils.GetTemplateFileContent(extensionSetupFileName);
 
-        var registeredServices = modelSourceInfos.Aggregate(string.Empty,
+        var modelInstanceServices = modelSourceInfos.Aggregate(string.Empty,
             (acc, m) => acc + $"services.AddSingleton<{m.NamedTypeSymbol.Name}>();\n");
 
-        var mapGrpcServices = string.Empty;
+        var modelServices = modelSourceInfos.Aggregate(string.Empty,
+            (acc, m) => acc +
+                        $"services.AddScoped<I{m.NamedTypeSymbol.Name}Service, {m.NamedTypeSymbol.Name}Service>();\n");
 
-        if (modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.Grpc)))
-        {
-            mapGrpcServices += modelSourceInfos.Aggregate(string.Empty,
-                (acc, m) => acc + $"builder.MapGrpcService<KurzSharp.GrpcApi.{m.TypeName}GrpcService>();\n");
-        }
+        var grpcModelSourceInfos = modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Grpc)).ToList();
 
-        var source = setupExtSource.Replace("services.AddTransient<PlaceholderModel>();", registeredServices)
+        // var modelGrpcClients = grpcModelSourceInfos.Aggregate(string.Empty,
+        //     (acc, m) => acc +
+        //                 $"services.AddCodeFirstGrpcClient<I{m.TypeName}Service>(o => {{ o.Address = clientBaseAddress; }});\n");
+        var mapGrpcServices = grpcModelSourceInfos.Aggregate(string.Empty,
+            (acc, m) => acc + $"builder.MapGrpcService<KurzSharp.GrpcApi.{m.TypeName}GrpcService>();\n");
+
+        var source = setupExtSource.Replace("services.AddTransient<PlaceholderModel>();", modelInstanceServices)
+            .Replace("services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();", modelServices)
+            // .Replace(
+            //     "services.AddCodeFirstGrpcClient<IPlaceholderModelService>(o => { o.Address = clientBaseAddress; });",
+            //     modelGrpcClients)
             .Replace("builder.MapGrpcService<GrpcApi.PlaceholderModelGrpcService>();", mapGrpcServices)
             // NOTE: Only the first namespace is used because only root namespace is required for this
             .FixupNamespaces(modelSourceInfos.First().TypeNamespace)

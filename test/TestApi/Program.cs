@@ -1,6 +1,4 @@
 using KurzSharp;
-using Microsoft.OpenApi.Models;
-using TestApi;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -8,6 +6,7 @@ var services = builder.Services;
 services.AddControllers();
 services.AddEndpointsApiExplorer();
 services.AddKurzSharp();
+services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -20,7 +19,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllers();
-// app.MapGrpcService<ProductService>();
 
 app.MapKurzSharpServices();
 

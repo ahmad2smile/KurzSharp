@@ -7,5 +7,8 @@
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests_Empty_GetAll&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.RestClientTests_Multiple_Add&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcEndpointTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcWithRestClientTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcWithGrpcClientTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

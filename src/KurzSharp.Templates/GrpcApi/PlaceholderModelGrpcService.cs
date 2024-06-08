@@ -1,105 +1,65 @@
-using KurzSharp.Templates.Database;
 using KurzSharp.Templates.Models;
+using KurzSharp.Templates.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
 #if NET7_0_OR_GREATER
-using Microsoft.EntityFrameworkCore;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using KurzSharp.GrpcApi;
+using Microsoft.AspNetCore.Http;
 #endif
 
 namespace KurzSharp.Templates.GrpcApi;
 
-public class PlaceholderModelGrpcService : PlaceholderModelProtoService.PlaceholderModelProtoServiceBase
+#if NET7_0_OR_GREATER
+[Tags("PlaceholderModelGrpc")]
+#endif
+[ApiController]
+[Route($"{nameof(PlaceholderModel)}Grpc")]
+public class PlaceholderModelGrpcService : ControllerBase, IPlaceholderModelGrpcService
 {
 #if NET7_0_OR_GREATER
     private readonly ILogger<PlaceholderModelGrpcService> _logger;
-    private readonly KurzSharpDbContext _context;
-    private readonly PlaceholderModel _model;
+    private readonly IPlaceholderModelService _placeholderModelService;
 
-    public PlaceholderModelGrpcService(ILogger<PlaceholderModelGrpcService> logger, KurzSharpDbContext context,
-        PlaceholderModel model)
+    public PlaceholderModelGrpcService(ILogger<PlaceholderModelGrpcService> logger, IPlaceholderModelService placeholderModelService)
     {
         _logger = logger;
-        _context = context;
-        _model = model;
+        _placeholderModelService = placeholderModelService;
     }
 
-    public override async Task<PlaceholderModelDtosResponse> GetProducts(Empty request, ServerCallContext context)
+    [HttpGet]
+    public async Task<IEnumerable<PlaceholderModelDto>> GetPlaceholderModels(CancellationToken cancellationToken)
     {
-        var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(context.CancellationToken);
-
-        var dtos = _model.OnBeforeAllRead(allPlaceholderModels);
-
-        var result = new PlaceholderModelDtosResponse();
-
-        result.PlaceholderModelDtos.AddRange(
-            dtos.Select(placeholderModel =>
-            {
-                var dto = _model.OnBeforeRead(placeholderModel);
-
-                return dto.FromModel();
-            })
-        );
+        var result = await _placeholderModelService.GetPlaceholderModels(cancellationToken);
 
         return result;
     }
 
-    public override async Task<PlaceholderModelDtosResponse> AddProduct(KurzSharp.GrpcApi.PlaceholderModelDto request,
-        ServerCallContext context)
+    [HttpPost]
+    public async Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto request, CancellationToken cancellationToken)
     {
-        var dto = _model.OnBeforeCreate(request.ToModel());
-
-        var r = await _context.PlaceholderModels.AddAsync(dto, context.CancellationToken);
-        await _context.SaveChangesAsync(context.CancellationToken);
-
-        var result = new PlaceholderModelDtosResponse();
-
-        result.PlaceholderModelDtos.Add(r.Entity.FromModel());
-
-        return result;
+        return await _placeholderModelService.AddPlaceholderModel(request, cancellationToken);
     }
 
-    public override async Task<PlaceholderModelDtosResponse> DeleteProduct(
-        KurzSharp.GrpcApi.PlaceholderModelDto request, ServerCallContext context)
+    [HttpDelete]
+    public async Task<PlaceholderModelDto> DeletePlaceholderModel(PlaceholderModelDto request, CancellationToken cancellationToken)
     {
         try
         {
-            var dto = _model.OnBeforeDelete(request.ToModel());
-
-            _context.Remove(dto);
-            await _context.SaveChangesAsync(context.CancellationToken);
+            return await _placeholderModelService.DeletePlaceholderModel(request, cancellationToken);
         }
         catch (Exception e)
         {
             _logger.LogError("Error while deleting {@Entity}, {Message}", request, e.Message);
-
-            throw new RpcException(new Status(StatusCode.Internal, $"Error while trying to delete {request}"),
-                $"Error while trying to delete {request}");
+    
+            throw new RpcException(new Status(Grpc.Core.StatusCode.Internal, $"Error while trying to delete {request}, {e.Message}"),
+                $"Error while trying to delete {request}, {e.Message}");
         }
-
-
-        var result = new PlaceholderModelDtosResponse();
-
-        result.PlaceholderModelDtos.Add(request);
-
-        return result;
     }
-
-    public override async Task<PlaceholderModelDtosResponse> UpdateProduct(
-        KurzSharp.GrpcApi.PlaceholderModelDto request, ServerCallContext context)
+    
+    [HttpPut]
+    public async Task<PlaceholderModelDto> UpdatePlaceholderModel(PlaceholderModelDto request, CancellationToken cancellationToken)
     {
-        var dto = _model.OnBeforeUpdate(request.ToModel());
-
-        _context.PlaceholderModels.Update(dto);
-        await _context.SaveChangesAsync(context.CancellationToken);
-
-        var result = new PlaceholderModelDtosResponse();
-
-        result.PlaceholderModelDtos.Add(request);
-
-        return result;
+        return await _placeholderModelService.UpdatePlaceholderModel(request, cancellationToken);
     }
 #endif
 }

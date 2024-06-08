@@ -16,16 +16,11 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.*" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.*" />
-        <PackageReference Include="protobuf-net.Grpc" Version="1.*" />
         <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.*" />
-        <PackageReference Include="protobuf-net.Grpc.AspNetCore.Reflection" Version="1.*" />
+        <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.*" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.*" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.*" />
         <PackageReference Include="System.ServiceModel.Primitives" Version="6.*" />
-        <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="7.*" />
-        <PackageReference Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.3.*" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
 
     <ItemGroup>
