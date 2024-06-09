@@ -8,52 +8,21 @@ using Microsoft.CodeAnalysis.Text;
 using KurzSharp.Templates.RestApi;
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.GrpcApi;
-using KurzSharp.Templates.Models;
 using KurzSharp.Templates.Services;
 
 namespace KurzSharp;
 
 [Generator]
-public class RestApiSourceGenerator : IIncrementalGenerator
+public class ApiSourceGenerator : IIncrementalGenerator
 {
-    private readonly Dictionary<string, string> _protoSources = new();
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var incrementalValueProvider = DeclarationsUtils.CreateSyntaxProvider<ClassDeclarationSyntax>(context);
 
         context.RegisterSourceOutput(incrementalValueProvider, Execute);
-
-        var projectDirProvider = context.AnalyzerConfigOptionsProvider
-            .Select(static (provider, _) =>
-            {
-                provider.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDirectory);
-
-                return projectDirectory;
-            });
-
-        context.RegisterSourceOutput(
-            projectDirProvider,
-            (_, projectDir) =>
-            {
-                var targetDirectory = Path.Combine(projectDir!, "Protos");
-
-                if (!Directory.Exists(targetDirectory))
-                {
-                    Directory.CreateDirectory(targetDirectory);
-                }
-
-                foreach (var p in _protoSources)
-                {
-                    var fs = File.CreateText(Path.Combine(targetDirectory, p.Key));
-
-                    fs.Write(p.Value);
-                    fs.Flush();
-                }
-            });
     }
 
-    private void Execute(SourceProductionContext ctx,
+    private static void Execute(SourceProductionContext ctx,
         (Compilation Left, ImmutableArray<(ClassDeclarationSyntax syntax, IEnumerable<AttributeSyntax> attributes)>
             Right) arg2)
     {
@@ -208,6 +177,9 @@ public class RestApiSourceGenerator : IIncrementalGenerator
 
             ctx.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
         }
+
+        var hooksSource = TemplatesUtils.GetTemplateFileContent("Hooks", nameof(LifecycleHooks<string>));
+        ctx.AddSource($"{nameof(LifecycleHooks<string>)}.g.cs", SourceText.From(hooksSource, Encoding.UTF8));
     }
 
     private static void AddDbContext(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)

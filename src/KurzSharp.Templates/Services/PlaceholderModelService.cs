@@ -1,14 +1,15 @@
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.Models;
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using Microsoft.EntityFrameworkCore;
-#endif
 using Microsoft.Extensions.Logging;
+#endif
 
 namespace KurzSharp.Templates.Services;
 
 public class PlaceholderModelService : IPlaceholderModelService
 {
+#if NET8_0_OR_GREATER
     private readonly ILogger<PlaceholderModelService> _logger;
     private readonly KurzSharpDbContext _context;
     private readonly PlaceholderModel _model;
@@ -21,7 +22,6 @@ public class PlaceholderModelService : IPlaceholderModelService
         _model = model;
     }
 
-#if NET7_0_OR_GREATER
     public async Task<IEnumerable<PlaceholderModelDto>> GetPlaceholderModels(CancellationToken cancellationToken)
     {
         var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken);
@@ -43,7 +43,7 @@ public class PlaceholderModelService : IPlaceholderModelService
     {
         var dto = _model.OnBeforeCreate(placeholderModelDto);
 
-        var result = await _context.PlaceholderModels.AddAsync(dto, cancellationToken);
+        var result = _context.PlaceholderModels.Add(dto);
         await _context.SaveChangesAsync(cancellationToken);
 
         return result.Entity;

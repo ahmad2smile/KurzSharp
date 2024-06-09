@@ -5,13 +5,14 @@
 [![Nuget](https://img.shields.io/nuget/dt/KurzSharp)](https://www.nuget.org/stats/packages/KurzSharp?groupby=Version)
 [![GitHub](https://img.shields.io/github/license/ahmad2smile/KurzSharp)](LICENSE)
 
-Easily scaffold API for non-production scenarios.
+Easily scaffold **Grpc** and or **REST** API for non-production scenarios.
 
 ## Usage
 
 1. Create any model with a `partial class` and add relevant Attribute for ex: `RestApi`
 
 ```csharp
+[GrpcApi] // Whicherver is desired
 [RestApi]
 public partial class Product
 {
@@ -33,7 +34,7 @@ services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("Produc
 
 🎉 You API is ready, Run project and open Swagger Docs.
 
-For more information please check `test/TestApi`
+For more information please check `examples/TestApi`
 
 ### Features:
 

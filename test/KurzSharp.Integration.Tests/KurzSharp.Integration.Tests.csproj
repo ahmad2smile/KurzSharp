@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\TestApi\TestApi.csproj"/>
+      <ProjectReference Include="..\..\examples\TestApi\TestApi.csproj" />
     </ItemGroup>
 
 </Project>

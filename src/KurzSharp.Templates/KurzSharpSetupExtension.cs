@@ -1,4 +1,4 @@
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using ProtoBuf.Grpc.Server;
 using Microsoft.AspNetCore.Routing;
 using KurzSharp.Templates.Database;
@@ -15,7 +15,7 @@ namespace KurzSharp.Templates;
 
 public static class KurzSharpSetupExtension
 {
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     public static void AddKurzSharp(this IServiceCollection services)
     {
         AddKurzSharp(services, o => o.UseInMemoryDatabase("KurzSharpDb"));

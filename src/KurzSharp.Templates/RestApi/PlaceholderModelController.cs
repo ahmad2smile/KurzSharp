@@ -1,22 +1,21 @@
 using KurzSharp.Templates.Models;
 using KurzSharp.Templates.Services;
+#if NET8_0_OR_GREATER
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-#if NET7_0_OR_GREATER
-using Microsoft.AspNetCore.Http;
 #endif
 
 // NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
 // but isn't linked as 'Compiled' due to not being support for netstandard2.0
 namespace KurzSharp.Templates.RestApi;
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 [Tags("PlaceholderModelRest")]
-#endif
 [ApiController]
 [Route($"{nameof(PlaceholderModel)}Rest")]
-// NOTE: Leave out class/interface declarations out of if NET7_0_OR_GREATER check to make it easier use in SourceGen with netstandard2.0
-public class PlaceholderModelController : ControllerBase
+// NOTE: Leave out class/interface declarations out of if NET8_0_OR_GREATER check to make it easier use in SourceGen with netstandard2.0
+public partial class PlaceholderModelController : ControllerBase
 {
     private readonly ILogger<PlaceholderModelController> _logger;
     private readonly IPlaceholderModelService _placeholderModelService;
@@ -29,7 +28,6 @@ public class PlaceholderModelController : ControllerBase
     }
 
 
-#if NET7_0_OR_GREATER
     [HttpGet]
     public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken)
     {
@@ -86,5 +84,7 @@ public class PlaceholderModelController : ControllerBase
         return Ok(placeholderModelDto);
     }
 
-#endif
 }
+#endif
+
+public partial class PlaceholderModelController {}

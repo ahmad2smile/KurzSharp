@@ -14,13 +14,8 @@ public class RestClientTests
     private const string BaseUrl = $"/{nameof(Product)}Rest";
 
     [Theory, AutoData]
-    public async Task Operations(List<ProductDto> d, List<ProductDto> updatedData)
+    public async Task Operations(List<ProductDto> data, List<ProductDto> updatedData)
     {
-        var data = d.Select(static p =>
-        {
-            p.Id = Guid.NewGuid();
-            return p;
-        }).ToList();
         var dataIds = data.Select(i => i.Id).ToList();
 
         while (data.Count < updatedData.Count)
@@ -87,7 +82,7 @@ public class RestClientTests
         afterDeletedRes.Should().NotContain(data);
     }
 
-    private async Task<IList<ProductDto>?> GetAll()
+    private async Task<IList<ProductDto>> GetAll()
     {
         var client = _factory.CreateClient();
 
@@ -95,6 +90,6 @@ public class RestClientTests
 
         var result = await response.Content.ReadFromJsonAsync<IList<ProductDto>>();
 
-        return result;
+        return result ?? ArraySegment<ProductDto>.Empty;
     }
 }

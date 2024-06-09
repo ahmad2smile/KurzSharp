@@ -10,14 +10,8 @@ namespace KurzSharp.Integration.Tests;
 public class GrpcWithGrpcClientTests(TestApiServerFixture factory) : IClassFixture<TestApiServerFixture>
 {
     [Theory, AutoData]
-    public async Task Operations(List<ProductDto> d, List<ProductDto> updatedData)
+    public async Task Operations(List<ProductDto> data, List<ProductDto> updatedData)
     {
-        var data = d.Select(static p =>
-        {
-            p.Id = Guid.NewGuid();
-            return p;
-        }).ToList();
-
         var dataIds = data.Select(static i => i.Id).ToList();
 
         while (data.Count < updatedData.Count)

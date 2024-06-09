@@ -4,7 +4,7 @@ namespace KurzSharp.Templates.Services;
 
 public interface IPlaceholderModelService
 {
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     Task<IEnumerable<PlaceholderModelDto>> GetPlaceholderModels(CancellationToken cancellationToken);
 
     Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto placeholderModelDto,

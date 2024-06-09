@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -11,18 +11,20 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" PrivateAssets="all"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.*"/>
-        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.*" />
-        <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.*" />
+        <PackageReference Include="Microsoft.AspNetCore.Metadata" Version="8.*" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.*"/>
+        <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.*"/>
+        <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.*"/>
+        <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.*" />
+        <PackageReference Include="System.ServiceModel.Primitives" Version="8.*" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,7 +35,6 @@
 
     <ItemGroup>
         <EmbeddedResource Include="..\KurzSharp.EmbeddedSource\RestApiAttribute.cs" Link="Templates\EmbeddedSource\RestApiAttribute.cs"/>
-        <EmbeddedResource Include="..\KurzSharp.EmbeddedSource\Hooks\*.cs" Link="Templates\EmbeddedSource\Hooks\%(Filename)%(Extension)"/>
     </ItemGroup>
 
     <ItemGroup>
