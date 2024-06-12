@@ -1,6 +1,6 @@
 # Kurz Sharp
 
-[![NuGet Publish](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml/badge.svg?branch=master&event=release)](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml)
+[![NuGet Publish](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml/badge.svg??event=push)](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml)
 [![Nuget](https://img.shields.io/nuget/v/KurzSharp)](https://www.nuget.org/packages/KurzSharp/)
 [![Nuget](https://img.shields.io/nuget/dt/KurzSharp)](https://www.nuget.org/stats/packages/KurzSharp?groupby=Version)
 [![GitHub](https://img.shields.io/github/license/ahmad2smile/KurzSharp)](LICENSE)
