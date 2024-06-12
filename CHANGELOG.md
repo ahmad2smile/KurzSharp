@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed issue when Model has no constructor and default compiler generated constructor is overwritten by
+  JsonConstructor, essentially enabling support for Models without any explicit constructors.
+
 ### Added
 
 - Added support for `GrpcApi` with Code First `protobuf-net.Grpc`.

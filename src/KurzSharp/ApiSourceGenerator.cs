@@ -124,7 +124,6 @@ public class ApiSourceGenerator : IIncrementalGenerator
         }
     }
 
-
     private static void AddModelDto(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
         foreach (var sourceInfo in modelSourceInfos)
@@ -173,6 +172,15 @@ public class ApiSourceGenerator : IIncrementalGenerator
                 .ReplacePlaceholderType(typeName)
                 .AddUsing(typeNamespace);
 
+            // NOTE: Declared == Explicitly declared in source code, not compiler generated
+            var hasDeclaredPublicCtor = modelSourceInfo.NamedTypeSymbol.InstanceConstructors.Any(x =>
+                !x.IsImplicitlyDeclared && x.DeclaredAccessibility == Accessibility.Public);
+
+            if (!hasDeclaredPublicCtor)
+            {
+                source = source.Replace("[JsonConstructor]\n    private", "[JsonConstructor]\n    public");
+            }
+
             var fileName = TemplatesUtils.PlaceholderTypeName.ReplacePlaceholderType(typeName);
 
             ctx.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
@@ -217,17 +225,11 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
         var grpcModelSourceInfos = modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Grpc)).ToList();
 
-        // var modelGrpcClients = grpcModelSourceInfos.Aggregate(string.Empty,
-        //     (acc, m) => acc +
-        //                 $"services.AddCodeFirstGrpcClient<I{m.TypeName}Service>(o => {{ o.Address = clientBaseAddress; }});\n");
         var mapGrpcServices = grpcModelSourceInfos.Aggregate(string.Empty,
             (acc, m) => acc + $"builder.MapGrpcService<KurzSharp.GrpcApi.{m.TypeName}GrpcService>();\n");
 
         var source = setupExtSource.Replace("services.AddTransient<PlaceholderModel>();", modelInstanceServices)
             .Replace("services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();", modelServices)
-            // .Replace(
-            //     "services.AddCodeFirstGrpcClient<IPlaceholderModelService>(o => { o.Address = clientBaseAddress; });",
-            //     modelGrpcClients)
             .Replace("builder.MapGrpcService<GrpcApi.PlaceholderModelGrpcService>();", mapGrpcServices)
             // NOTE: Only the first namespace is used because only root namespace is required for this
             .FixupNamespaces(modelSourceInfos.First().TypeNamespace)

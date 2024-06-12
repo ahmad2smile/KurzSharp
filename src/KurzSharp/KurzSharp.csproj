@@ -40,7 +40,6 @@
     <ItemGroup>
         <EmbeddedResource Include="..\KurzSharp.Templates\**\*.cs" Link="Templates\%(RecursiveDir)%(FileName)%(Extension)"/>
         <EmbeddedResource Remove="..\KurzSharp.Templates\obj\**"/>
-        <None Remove="$(DefaultItemExcludes)"/>
     </ItemGroup>
 
     <ItemGroup>
