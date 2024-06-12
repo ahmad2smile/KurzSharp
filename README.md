@@ -34,6 +34,9 @@ services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("Produc
 
 🎉 You API is ready, Run project and open Swagger Docs.
 
+![image](https://github.com/ahmad2smile/KurzSharp/assets/6108922/221cc0a3-1673-4251-818b-3d9a0e856567)
+
+
 For more information please check `examples/TestApi`
 
 ### Features:
