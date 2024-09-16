@@ -38,6 +38,11 @@ For Database add relavent Db package for Entity Framework and configure `KurzSha
 ```csharp
 services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("ProductsDb")));
 ```
+Map Routes and Services:
+
+```csharp
+app.MapKurzSharpServices();
+```
 
 🎉 You API is ready, Run project and open Swagger Docs.
 
