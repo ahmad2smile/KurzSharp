@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!--        <PackageReference Include="KurzSharp" Version="2.0.1" />-->
         <!--        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />-->
+<!--        <PackageReference Include="KurzSharp" Version="2.1.0" />-->
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
     </ItemGroup>
 

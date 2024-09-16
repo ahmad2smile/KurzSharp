@@ -57,6 +57,6 @@ public class GrpcWithGrpcClientTests(TestApiServerFixture factory) : IClassFixtu
         serviceResult = await client.GetProducts(CancellationToken.None);
         var afterDeletedRes = serviceResult.ToList();
 
-        afterDeletedRes.Should().NotContain(data);
+        afterDeletedRes.Should().NotContain(updatedResults);
     }
 }

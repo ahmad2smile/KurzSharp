@@ -5,7 +5,13 @@
 [![Nuget](https://img.shields.io/nuget/dt/KurzSharp)](https://www.nuget.org/stats/packages/KurzSharp?groupby=Version)
 [![GitHub](https://img.shields.io/github/license/ahmad2smile/KurzSharp)](LICENSE)
 
-Easily scaffold **Grpc** and or **REST** API for non-production scenarios.
+Easily scaffold non-production APIs in any or all of following Architectures:
+
+1. GraphQl ([Hotchocolate](https://github.com/ChilliCream/graphql-platform))
+2. Grpc (Code First [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc))
+3. REST ([ASP.NET Core Controllers](https://learn.microsoft.com/en-us/aspnet/core/web-api))
+
+Minimum required dotnet version: [.NET8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
 ## Usage
 
@@ -14,6 +20,7 @@ Easily scaffold **Grpc** and or **REST** API for non-production scenarios.
 ```csharp
 [GrpcApi] // Whicherver is desired
 [RestApi]
+[GraphQlApi]
 public partial class Product
 {
     public Guid Id { get; set; }
@@ -33,6 +40,12 @@ services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("Produc
 ```
 
 🎉 You API is ready, Run project and open Swagger Docs.
+
+For GraphQl API open [Bana Cake Pop](https://chillicream.com/docs/bananacakepop) at [http://localhost:5114/graphql](http://localhost:5114/graphql)
+
+![image](https://github.com/user-attachments/assets/6307e50f-da44-4ad0-aa5c-6976549afc39)
+
+For REST or Grpc API open [Swagger](https://swagger.io/) at [http://localhost:5114/swagger](http://localhost:5114/swagger)
 
 ![image](https://github.com/ahmad2smile/KurzSharp/assets/6108922/221cc0a3-1673-4251-818b-3d9a0e856567)
 

@@ -12,9 +12,9 @@ public class ModelSourceInfo(
     public string TypeName { get; } = typeName;
     public string TypeNamespace { get; } = typeNamespace;
     public INamedTypeSymbol NamedTypeSymbol { get; } = namedTypeSymbol;
-    public IList<ApiKind> ApiKinds { get; } = ParseApiKind(attributeSyntaxes);
+    public IReadOnlyCollection<ApiKind> ApiKinds { get; } = ParseApiKind(attributeSyntaxes);
 
-    private static IList<ApiKind> ParseApiKind(IList<AttributeSyntax> attributeSyntaxes) =>
+    private static IReadOnlyCollection<ApiKind> ParseApiKind(IList<AttributeSyntax> attributeSyntaxes) =>
         attributeSyntaxes.Select(attributeSyntax =>
         {
             var attributeName = attributeSyntax.Name + "Attribute";
@@ -23,6 +23,7 @@ public class ModelSourceInfo(
             {
                 nameof(RestApiAttribute) => ApiKind.Rest,
                 nameof(GrpcApiAttribute) => ApiKind.Grpc,
+                nameof(GraphQlApiAttribute) => ApiKind.GraphQl,
                 _ => throw new ArgumentException($"Unknown ApiKind: {attributeSyntax.Name.ToString()}")
             };
         }).ToList();

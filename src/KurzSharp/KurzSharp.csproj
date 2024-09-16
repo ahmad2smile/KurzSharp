@@ -25,6 +25,9 @@
         <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.*"/>
         <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.*" />
         <PackageReference Include="System.ServiceModel.Primitives" Version="8.*" />
+        <PackageReference Include="HotChocolate" Version="13.*" />
+        <PackageReference Include="HotChocolate.AspNetCore" Version="13.*" />
+        <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.*" />
     </ItemGroup>
 
     <ItemGroup>

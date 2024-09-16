@@ -11,20 +11,23 @@ public class PlaceholderModelService : IPlaceholderModelService
 {
 #if NET8_0_OR_GREATER
     private readonly ILogger<PlaceholderModelService> _logger;
-    private readonly KurzSharpDbContext _context;
+    private readonly IDbContextFactory<KurzSharpDbContext> _contextFactory;
     private readonly PlaceholderModel _model;
 
-    public PlaceholderModelService(ILogger<PlaceholderModelService> logger, KurzSharpDbContext context,
+    public PlaceholderModelService(ILogger<PlaceholderModelService> logger,
+        IDbContextFactory<KurzSharpDbContext> contextFactory,
         PlaceholderModel model)
     {
         _logger = logger;
-        _context = context;
+        _contextFactory = contextFactory;
         _model = model;
     }
 
     public async Task<IEnumerable<PlaceholderModelDto>> GetPlaceholderModels(CancellationToken cancellationToken)
     {
-        var allPlaceholderModels = await _context.PlaceholderModels.ToListAsync(cancellationToken);
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var allPlaceholderModels = await context.PlaceholderModels.ToListAsync(cancellationToken);
 
         var dtos = _model.OnBeforeAllRead(allPlaceholderModels);
 
@@ -41,10 +44,12 @@ public class PlaceholderModelService : IPlaceholderModelService
     public async Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
         var dto = _model.OnBeforeCreate(placeholderModelDto);
 
-        var result = _context.PlaceholderModels.Add(dto);
-        await _context.SaveChangesAsync(cancellationToken);
+        var result = context.PlaceholderModels.Add(dto);
+        await context.SaveChangesAsync(cancellationToken);
 
         return result.Entity;
     }
@@ -52,10 +57,12 @@ public class PlaceholderModelService : IPlaceholderModelService
     public async Task<PlaceholderModelDto> DeletePlaceholderModel(PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
         var dto = _model.OnBeforeDelete(placeholderModelDto);
 
-        _context.PlaceholderModels.Remove(dto);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.PlaceholderModels.Remove(dto);
+        await context.SaveChangesAsync(cancellationToken);
 
         return placeholderModelDto;
     }
@@ -63,10 +70,12 @@ public class PlaceholderModelService : IPlaceholderModelService
     public async Task<PlaceholderModelDto> UpdatePlaceholderModel(PlaceholderModelDto placeholderModelDto,
         CancellationToken cancellationToken)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
         var dto = _model.OnBeforeUpdate(placeholderModelDto);
 
-        _context.PlaceholderModels.Update(dto);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.PlaceholderModels.Update(dto);
+        await context.SaveChangesAsync(cancellationToken);
 
         return placeholderModelDto;
     }

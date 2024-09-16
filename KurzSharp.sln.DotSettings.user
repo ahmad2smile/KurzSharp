@@ -1,4 +1,8 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	
+	
+	<s:String x:Key="/Default/CodeInspection/Highlighting/SweaWarningsMode/@EntryValue">DoNotShowAndRun</s:String>
+	
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/a050313/.nuget/packages/kurzsharp/1.0.13/lib/netstandard2.0/KurzSharp.EmbeddedSource.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
@@ -10,5 +14,6 @@
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcEndpointTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcWithRestClientTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GrpcWithGrpcClientTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::0AC89534-25A6-465C-A845-661237FEE9BF::net8.0::KurzSharp.Integration.Tests.GraphQlClientTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

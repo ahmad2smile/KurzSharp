@@ -3,6 +3,7 @@ using KurzSharp;
 namespace TestApi.Models;
 
 [GrpcApi]
+[GraphQlApi]
 public partial class User
 {
     public Guid Id { get; set; }

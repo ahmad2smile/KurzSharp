@@ -66,7 +66,7 @@ public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixtu
 
         var afterDeletedRes = await GetAll();
 
-        afterDeletedRes.Should().NotContain(data);
+        afterDeletedRes.Should().NotContain(updatedResults);
     }
 
     private async Task<IList<ProductDto>> GetAll()

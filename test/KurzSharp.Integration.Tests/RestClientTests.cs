@@ -65,21 +65,9 @@ public class RestClientTests
             await client.SendAsync(request);
         }
 
-        foreach (var dto in data)
-        {
-            var request = new HttpRequestMessage
-            {
-                Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"),
-                Method = HttpMethod.Delete,
-                RequestUri = new Uri(client.BaseAddress!, BaseUrl)
-            };
-
-            await client.SendAsync(request);
-        }
-
         var afterDeletedRes = await GetAll();
 
-        afterDeletedRes.Should().NotContain(data);
+        afterDeletedRes.Should().NotContain(updatedResults);
     }
 
     private async Task<IList<ProductDto>> GetAll()

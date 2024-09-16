@@ -2,6 +2,10 @@
 using ProtoBuf.Grpc.Server;
 using Microsoft.AspNetCore.Routing;
 using KurzSharp.Templates.Database;
+#if GRAPHQL_API
+using KurzSharp.Templates.GraphQlApi;
+using HotChocolate.Data;
+#endif
 using KurzSharp.Templates.Models;
 using KurzSharp.Templates.Services;
 using Microsoft.AspNetCore.Builder;
@@ -23,19 +27,45 @@ public static class KurzSharpSetupExtension
 
     public static void AddKurzSharp(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction)
     {
-        services.AddDbContext<KurzSharpDbContext>(optionsAction);
-
         // NOTE: Register Models with DI so when new instance of those are requested from DI it would automatically provide
         // DI requested Deps in the model constructor ex: Logger.
         services.AddTransient<PlaceholderModel>();
-        services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();
+        services.AddPooledDbContextFactory<KurzSharpDbContext>(optionsAction);
 
+#if REST_API || GRPC_API
+        services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();
+#endif
+
+#if GRPC_API
         services.AddCodeFirstGrpc();
+#endif
+
+#if GRAPHQL_API
+        services.AddGraphQLServer()
+            .RegisterDbContext<KurzSharpDbContext>(DbContextKind.Pooled)
+            .AddQueryType<Query>()
+            .AddTypeExtension<PlaceholderModelQuery>()
+            .AddMutationType<Mutation>()
+            .AddTypeExtension<PlaceholderModelMutation>()
+            .AddFiltering()
+            .AddSorting()
+            .AddProjections();
+#endif
     }
 
     public static void MapKurzSharpServices(this IEndpointRouteBuilder builder)
     {
+#if REST_API
+        builder.MapControllers();
+#endif
+
+#if GRPC_API
         builder.MapGrpcService<GrpcApi.PlaceholderModelGrpcService>();
+#endif
+
+#if GRAPHQL_API
+        builder.MapGraphQL();
+#endif
     }
 #endif
 }

@@ -71,6 +71,8 @@ public static class TemplatesUtils
     /// <returns></returns>
     public static string ReplacePlaceholderType(this string source, string typeName)
     {
+        // NOTE: Doesn't work .netstandard2.0
+        // ReSharper disable once ReplaceSubstringWithRangeIndexer
         var typeCamelCase = typeName.Substring(0, 1).ToLowerInvariant() + typeName.Substring(1);
 
         return source.Replace(PlaceholderTypeName, typeName)
