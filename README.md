@@ -1,4 +1,4 @@
-# Kurz Sharp
+# KurzSharp
 
 [![NuGet Publish](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml/badge.svg??event=push)](https://github.com/ahmad2smile/KurzSharp/actions/workflows/publish.yml)
 [![Nuget](https://img.shields.io/nuget/v/KurzSharp)](https://www.nuget.org/packages/KurzSharp/)
@@ -7,7 +7,7 @@
 
 Easily scaffold non-production APIs in any or all of following Architectures:
 
-1. GraphQl ([Hotchocolate](https://github.com/ChilliCream/graphql-platform))
+1. GraphQl ([HotChocolate](https://github.com/ChilliCream/graphql-platform))
 2. Grpc (Code First [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc))
 3. REST ([ASP.NET Core Controllers](https://learn.microsoft.com/en-us/aspnet/core/web-api))
 
@@ -94,3 +94,7 @@ public partial class Product
     }
 }
 ```
+
+## How it works:
+
+When a `KurzSharp` attributes like `RestApi`, `GraphQlApi` or `GrpcApi` is added on some Model class, it creates a new `Dto` entity which has the same properties as the Model. This entity is used to store data through `Entity Framework Core` and is also sent over the wire through API. It also takes attributes from the properties and puts them on the `Dto`'s properties for example: `JsonIgnoreAttribute`.

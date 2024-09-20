@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for `GraphQlApi` with [Hotchocolate](https://github.com/ChilliCream/graphql-platform).
+- Added support for Property based Attributes, which will be applied to created `Dto` for the model. ex: `JsonIgnoreAttribute`
 
 ## [2.1.0] - 2024-06-12
 

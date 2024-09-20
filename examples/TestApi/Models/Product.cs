@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using KurzSharp;
 
 namespace TestApi.Models;
@@ -17,6 +18,8 @@ public partial class Product
 
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
+
+    [JsonIgnore]
     public string Password { get; set; } = string.Empty;
 
     public override ProductDto OnBeforeCreate(ProductDto dto)

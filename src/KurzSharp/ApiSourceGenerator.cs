@@ -179,23 +179,24 @@ public class ApiSourceGenerator : IIncrementalGenerator
     {
         foreach (var sourceInfo in modelSourceInfos)
         {
-            var typeSymbol = sourceInfo.NamedTypeSymbol;
             var typeName = sourceInfo.TypeName;
             var typeNamespace = sourceInfo.TypeNamespace;
 
-            var props = typeSymbol.GetMembers()
-                .Where(s => s.Kind == SymbolKind.Property)
-                .Cast<IPropertySymbol>()
-                .ToArray();
-
             var propsDeclarations = string.Join("\n",
-                props.Select((s, i) =>
-                    $"[DataMember(Order = {i + 1})]\n{s.DeclaredAccessibility.ToString().ToLower()} {s.Type} {s.Name} {{ get; set; }}"));
+                sourceInfo.NamedTypeSymbol
+                    .GetMembers()
+                    .Where(s => s.Kind == SymbolKind.Property)
+                    .Cast<IPropertySymbol>()
+                    .Select((s, i) =>
+                        $$"""
+                          {{GetPropertyAttributes(s.GetAttributes())}}
+                          [DataMember(Order = {{i + 1}})]
+                          {{s.DeclaredAccessibility.ToString().ToLower()}} {{s.Type}} {{s.Name}} { get; set; }
+                          """));
 
-            var source = TemplatesUtils
-                .GetTemplateFileContent("Models", $"{TemplatesUtils.PlaceholderTypeName}Dto")
+            var source = TemplatesUtils.GetTemplateFileContent("Models", TemplatesUtils.PlaceholderDtoTypeName)
                 .FixupNamespaces(typeNamespace)
-                .Replace("[DataMember(Order = 1)]", string.Empty)
+                .Replace("[DataMember(Order = 1)]\n", string.Empty)
                 .Replace("public Guid PlaceholderId { get; set; }", propsDeclarations)
                 .ReplacePlaceholderType(typeName)
                 .AddUsing(typeNamespace);
@@ -204,6 +205,19 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
             ctx.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
         }
+    }
+
+    private static string GetPropertyAttributes(ImmutableArray<AttributeData> attributes)
+    {
+        return attributes.Aggregate("\n", (syntax, attributeData) =>
+        {
+            var namedArgs = attributeData.NamedArguments.Select((namedArg) => $"{namedArg.Key}={namedArg.Value.Value}");
+            var constructorArgs = attributeData.ConstructorArguments.Select(b => b.Value?.ToString());
+
+            var args = string.Join(", ", namedArgs.Concat(constructorArgs));
+
+            return syntax + $"[{attributeData.AttributeClass}({args})]";
+        });
     }
 
     private static void AddPartialModel(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
