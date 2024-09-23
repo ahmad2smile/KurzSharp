@@ -26,7 +26,7 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build
+        run: dotnet build /p:Version=$(git describe --tags)
 
       - name: Test with dotnet
         run: dotnet test --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}"
@@ -40,7 +40,7 @@ jobs:
         if: ${{ always() }}
 
       - name: Create the package
-        run: dotnet pack --configuration Release src/KurzSharp
+        run: dotnet pack --configuration Release src/KurzSharp /p:Version=$(git describe --tags)
 
       - name: Publish the package
         run: |
