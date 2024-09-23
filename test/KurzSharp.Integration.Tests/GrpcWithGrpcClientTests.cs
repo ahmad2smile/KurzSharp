@@ -22,41 +22,42 @@ public class GrpcWithGrpcClientTests(TestApiServerFixture factory) : IClassFixtu
         var client = factory.Services.GetRequiredService<IProductGrpcService>();
 
         // INSERT
-        foreach (var dto in data)
-        {
-            await client.AddProduct(dto, CancellationToken.None);
-        }
+        await Task.WhenAll(data.Select(dto => client.AddProduct(dto, CancellationToken.None)));
 
         // READ
-        var serviceResult = await client.GetProducts(CancellationToken.None);
-        var results = serviceResult.ToList();
+        var afterAddDtos = await GetAll(dataIds);
 
-        results.Select(i => i.Id).ToList().Should().Contain(dataIds);
+        afterAddDtos.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // UPDATE
-        for (var i = 0; i < data.Count; i++)
+        await Task.WhenAll(afterAddDtos.Select((dto, i) =>
         {
-            var dto = results[i];
-            dto.Name = updatedData[i].Name;
-            dto.Password = updatedData[i].Password;
+            var updateDto = updatedData[i];
 
-            await client.UpdateProduct(dto, CancellationToken.None);
-        }
+            dto.Name = updateDto.Name;
+            dto.Password = updateDto.Password;
 
-        serviceResult = await client.GetProducts(CancellationToken.None);
-        var updatedResults = serviceResult.ToList();
+            return client.UpdateProduct(dto, CancellationToken.None);
+        }));
 
-        updatedResults.Select(i => i.Id).ToList().Should().Contain(dataIds);
+        var afterUpdateDtos = await GetAll(dataIds);
+
+        afterUpdateDtos.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // DELETE
-        foreach (var dto in data)
-        {
-            await client.DeleteProduct(dto, CancellationToken.None);
-        }
+        await Task.WhenAll(data.Select(dto => client.DeleteProduct(dto, CancellationToken.None)));
 
-        serviceResult = await client.GetProducts(CancellationToken.None);
-        var afterDeletedRes = serviceResult.ToList();
+        var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(updatedResults);
+        afterDeletedRes.Should().NotContain(afterUpdateDtos);
+    }
+
+    private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
+    {
+        var client = factory.Services.GetRequiredService<IProductGrpcService>();
+
+        var result = await client.GetProducts(CancellationToken.None);
+
+        return result?.Where(r => relatedIds.Contains(r.Id)).ToList() ?? [];
     }
 }

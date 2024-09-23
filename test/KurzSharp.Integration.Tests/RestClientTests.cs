@@ -33,14 +33,14 @@ public class RestClientTests
         }
 
         // READ
-        var results = await GetAll();
+        var afterAddDtos = await GetAll(dataIds);
 
-        results.Select(i => i.Id).ToList().Should().Contain(dataIds);
+        afterAddDtos.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // UPDATE
         for (var i = 0; i < data.Count; i++)
         {
-            var dto = results[i];
+            var dto = afterAddDtos[i];
             dto.Name = updatedData[i].Name;
             dto.Password = updatedData[i].Password;
 
@@ -48,12 +48,12 @@ public class RestClientTests
                 new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"));
         }
 
-        var updatedResults = await GetAll();
+        var afterUpdateDtos = await GetAll(dataIds);
 
-        updatedResults.Select(i => i.Id).Should().Contain(dataIds);
+        afterUpdateDtos.Select(i => i.Id).Should().Contain(dataIds);
 
         // DELETE
-        foreach (var dto in updatedResults)
+        foreach (var dto in afterUpdateDtos)
         {
             var request = new HttpRequestMessage
             {
@@ -65,12 +65,12 @@ public class RestClientTests
             await client.SendAsync(request);
         }
 
-        var afterDeletedRes = await GetAll();
+        var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(updatedResults);
+        afterDeletedRes.Should().NotContain(afterUpdateDtos);
     }
 
-    private async Task<IList<ProductDto>> GetAll()
+    private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
     {
         var client = _factory.CreateClient();
 
@@ -78,6 +78,6 @@ public class RestClientTests
 
         var result = await response.Content.ReadFromJsonAsync<IList<ProductDto>>();
 
-        return result ?? ArraySegment<ProductDto>.Empty;
+        return result?.Where(r => relatedIds.Contains(r.Id)).ToList() ?? [];
     }
 }

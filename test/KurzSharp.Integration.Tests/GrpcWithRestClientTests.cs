@@ -25,34 +25,33 @@ public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixtu
         var client = factory.CreateClient();
 
         // INSERT
-        foreach (var dto in data)
-        {
-            await client.PostAsync(BaseUrl,
-                new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"));
-        }
+        await Task.WhenAll(data.Select(dto => client.PostAsync(BaseUrl,
+            new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"))));
 
         // READ
-        var results = await GetAll();
+        var afterAddDtos = await GetAll(dataIds);
 
-        results.Select(i => i.Id).ToList().Should().Contain(dataIds);
+        afterAddDtos.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // UPDATE
-        for (var i = 0; i < data.Count; i++)
+        await Task.WhenAll(afterAddDtos.Select((dto, i) =>
         {
-            var dto = results[i];
-            dto.Name = updatedData[i].Name;
-            dto.Password = updatedData[i].Password;
+            var updateDto = updatedData[i];
 
-            await client.PutAsync(BaseUrl,
+            dto.Name = updateDto.Name;
+            dto.Password = updateDto.Password;
+
+            return client.PutAsync(BaseUrl,
                 new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"));
-        }
+        }));
 
-        var updatedResults = await GetAll();
+
+        var updatedResults = await GetAll(dataIds);
 
         updatedResults.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // DELETE
-        foreach (var dto in data)
+        await Task.WhenAll(data.Select(dto =>
         {
             var request = new HttpRequestMessage
             {
@@ -61,15 +60,15 @@ public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixtu
                 RequestUri = new Uri(client.BaseAddress!, BaseUrl)
             };
 
-            await client.SendAsync(request);
-        }
+            return client.SendAsync(request);
+        }));
 
-        var afterDeletedRes = await GetAll();
+        var afterDeletedRes = await GetAll(dataIds);
 
         afterDeletedRes.Should().NotContain(updatedResults);
     }
 
-    private async Task<IList<ProductDto>> GetAll()
+    private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
     {
         var client = factory.CreateClient();
 
@@ -77,6 +76,6 @@ public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixtu
 
         var result = await response.Content.ReadFromJsonAsync<IList<ProductDto>>();
 
-        return result ?? ArraySegment<ProductDto>.Empty;
+        return result?.Where(r => relatedIds.Contains(r.Id)).ToList() ?? [];
     }
 }

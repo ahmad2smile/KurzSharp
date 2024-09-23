@@ -43,7 +43,7 @@ public class GraphQlClientTests
         }
 
         // READ
-        var results = await GetAll();
+        var results = await GetAll(dataIds);
 
         results.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
@@ -70,7 +70,7 @@ public class GraphQlClientTests
                 new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
         }
 
-        var updatedResults = await GetAll();
+        var updatedResults = await GetAll(dataIds);
 
         updatedResults.Select(i => i.Id).Should().Contain(dataIds);
 
@@ -93,12 +93,12 @@ public class GraphQlClientTests
                 new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
         }
 
-        var afterDeletedRes = await GetAll();
+        var afterDeletedRes = await GetAll(dataIds);
 
         afterDeletedRes.Should().NotContain(updatedResults);
     }
 
-    private async Task<IList<ProductDto>> GetAll()
+    private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
     {
         var client = _factory.CreateClient();
 
@@ -121,7 +121,7 @@ public class GraphQlClientTests
 
         var nodes = await ParseProductDtos(response, "products");
 
-        return nodes.ToList();
+        return nodes.Where(r => relatedIds.Contains(r.Id)).ToList();
     }
 
     private static async Task<List<ProductDto>> ParseProductDtos(HttpResponseMessage response, string dataKey)
