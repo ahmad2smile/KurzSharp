@@ -27,18 +27,7 @@ public class PlaceholderModelService : IPlaceholderModelService
     {
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var allPlaceholderModels = await context.PlaceholderModels.ToListAsync(cancellationToken);
-
-        var dtos = _model.OnBeforeAllRead(allPlaceholderModels);
-
-        var data = dtos.Select(placeholderModel =>
-        {
-            var dto = _model.OnBeforeRead(placeholderModel);
-
-            return dto;
-        });
-
-        return data;
+        return await _model.OnBeforeAllRead(context.PlaceholderModels.ToDtos()).ToListAsync(cancellationToken);
     }
 
     public async Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto placeholderModelDto,
@@ -48,10 +37,10 @@ public class PlaceholderModelService : IPlaceholderModelService
 
         var dto = _model.OnBeforeCreate(placeholderModelDto);
 
-        var result = context.PlaceholderModels.Add(dto);
+        var result = context.PlaceholderModels.Add(dto.ToModel());
         await context.SaveChangesAsync(cancellationToken);
 
-        return result.Entity;
+        return result.Entity.ToDto();
     }
 
     public async Task<PlaceholderModelDto> DeletePlaceholderModel(PlaceholderModelDto placeholderModelDto,
@@ -61,7 +50,7 @@ public class PlaceholderModelService : IPlaceholderModelService
 
         var dto = _model.OnBeforeDelete(placeholderModelDto);
 
-        context.PlaceholderModels.Remove(dto);
+        context.PlaceholderModels.Remove(dto.ToModel());
         await context.SaveChangesAsync(cancellationToken);
 
         return placeholderModelDto;
@@ -74,7 +63,7 @@ public class PlaceholderModelService : IPlaceholderModelService
 
         var dto = _model.OnBeforeUpdate(placeholderModelDto);
 
-        context.PlaceholderModels.Update(dto);
+        context.PlaceholderModels.Update(dto.ToModel());
         await context.SaveChangesAsync(cancellationToken);
 
         return placeholderModelDto;

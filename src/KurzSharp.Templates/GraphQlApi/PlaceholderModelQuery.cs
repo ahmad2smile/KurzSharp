@@ -1,7 +1,7 @@
-
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.Models;
 #if NET8_0_OR_GREATER
+using HotChocolate;
 using HotChocolate.Data;
 using HotChocolate.Types;
 #endif
@@ -18,6 +18,7 @@ public class PlaceholderModelQuery
     [UseProjection]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<PlaceholderModelDto> GetPlaceholderModels(KurzSharpDbContext context) => context.PlaceholderModels;
+    public IQueryable<PlaceholderModelDto> GetPlaceholderModels(KurzSharpDbContext context,
+        [Service] PlaceholderModel model) => model.OnBeforeAllRead(context.PlaceholderModels.ToDtos());
 #endif
 }

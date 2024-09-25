@@ -11,7 +11,7 @@ namespace KurzSharp.Templates.Models;
 public partial class PlaceholderModel : LifecycleHooks<PlaceholderModelDto>
 {
     [JsonConstructor]
-    private PlaceholderModel()
+    public PlaceholderModel()
     {
     }
 

@@ -5,12 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Changed storing `Model` in Db rather `Dto` and setup `Dto` to `Model` mapping and vice versa with an extension on
+  `Model`.
+
 ## [3.0.0]
 
 ### Added
 
 - Added support for `GraphQlApi` with [Hotchocolate](https://github.com/ChilliCream/graphql-platform).
-- Added support for Property based Attributes, which will be applied to created `Dto` for the model. ex: `JsonIgnoreAttribute`
+- Added support for Property based Attributes, which will be applied to created `Dto` for the model. ex:
+  `JsonIgnoreAttribute`
 
 ## [2.1.0] - 2024-06-12
 

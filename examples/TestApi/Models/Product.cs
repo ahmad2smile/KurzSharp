@@ -18,8 +18,6 @@ public partial class Product
 
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-
-    [JsonIgnore]
     public string Password { get; set; } = string.Empty;
 
     public override ProductDto OnBeforeCreate(ProductDto dto)
@@ -31,7 +29,7 @@ public partial class Product
         return dto;
     }
 
-    public override IEnumerable<ProductDto> OnBeforeAllRead(IEnumerable<ProductDto> dtos)
+    public override IQueryable<ProductDto> OnBeforeAllRead(IQueryable<ProductDto> dtos)
     {
         _logger.LogInformation("Before we read all... we must log here");
 

@@ -67,6 +67,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
         }
 
         AddModelDto(modelSourceInfos, ctx);
+        AddModelExtensions(modelSourceInfos, ctx);
         AddPartialModel(modelSourceInfos, ctx);
         AddDbContext(modelSourceInfos, ctx);
         AddSetupExtension(modelSourceInfos, ctx);
@@ -182,22 +183,26 @@ public class ApiSourceGenerator : IIncrementalGenerator
             var typeName = sourceInfo.TypeName;
             var typeNamespace = sourceInfo.TypeNamespace;
 
-            var propsDeclarations = string.Join("\n",
-                sourceInfo.NamedTypeSymbol
-                    .GetMembers()
-                    .Where(s => s.Kind == SymbolKind.Property)
-                    .Cast<IPropertySymbol>()
-                    .Select((s, i) =>
-                        $$"""
-                          {{GetPropertyAttributes(s.GetAttributes())}}
-                          [DataMember(Order = {{i + 1}})]
-                          {{s.DeclaredAccessibility.ToString().ToLower()}} {{s.Type}} {{s.Name}} { get; set; }
-                          """));
+            var propSymbols = sourceInfo.NamedTypeSymbol
+                .GetMembers()
+                .Where(s => s.Kind == SymbolKind.Property)
+                .Cast<IPropertySymbol>()
+                .ToList();
+
+            var propsDeclarations = string.Join("\n", propSymbols
+                .Select((s, i) =>
+                    $$"""
+                      {{GetPropertyAttributes(s.GetAttributes())}}
+                      [DataMember(Order = {{i + 1}})]
+                      {{s.DeclaredAccessibility.ToString().ToLower()}} {{s.Type}} {{s.Name}} { get; set; }
+                      """));
 
             var source = TemplatesUtils.GetTemplateFileContent("Models", TemplatesUtils.PlaceholderDtoTypeName)
                 .FixupNamespaces(typeNamespace)
                 .Replace("[DataMember(Order = 1)]\n", string.Empty)
                 .Replace("public Guid PlaceholderId { get; set; }", propsDeclarations)
+                .Replace("model.Id = PlaceholderId;",
+                    string.Join("\n", propSymbols.Select(s => $"model.{s.Name} = {s.Name};\n")))
                 .ReplacePlaceholderType(typeName)
                 .AddUsing(typeNamespace);
 
@@ -218,6 +223,32 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
             return syntax + $"[{attributeData.AttributeClass}({args})]";
         });
+    }
+
+    private static void AddModelExtensions(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
+    {
+        foreach (var sourceInfo in modelSourceInfos)
+        {
+            var typeName = sourceInfo.TypeName;
+            var typeNamespace = sourceInfo.TypeNamespace;
+
+            var propSymbols = sourceInfo.NamedTypeSymbol
+                .GetMembers()
+                .Where(s => s.Kind == SymbolKind.Property)
+                .Cast<IPropertySymbol>();
+
+            var source = TemplatesUtils
+                .GetTemplateFileContent("Models", $"{TemplatesUtils.PlaceholderTypeName}Extensions")
+                .Replace("dto.PlaceholderId = model.Id;",
+                    string.Join("\n", propSymbols.Select(s => $"dto.{s.Name} = model.{s.Name};\n")))
+                .FixupNamespaces(typeNamespace)
+                .ReplacePlaceholderType(typeName)
+                .AddUsing(typeNamespace);
+
+            var fileName = TemplatesUtils.PlaceholderTypeName.ReplacePlaceholderType(typeName);
+
+            ctx.AddSource($"{fileName}Extensions.g.cs", SourceText.From(source, Encoding.UTF8));
+        }
     }
 
     private static void AddPartialModel(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
@@ -257,7 +288,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
         const string dbContextName = nameof(KurzSharpDbContext);
 
         const string placeholderDbSet =
-            $"public DbSet<{TemplatesUtils.PlaceholderDtoTypeName}> {TemplatesUtils.PlaceholderTypeName}s {{ get; set; }}";
+            $"public DbSet<{TemplatesUtils.PlaceholderTypeName}> {TemplatesUtils.PlaceholderTypeName}s {{ get; set; }}";
 
         var dbSets = string.Join("\n",
             modelSourceInfos.Select(t => placeholderDbSet.ReplacePlaceholderType(t.TypeName)));
