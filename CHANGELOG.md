@@ -5,12 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.1.0]
 
 ### Changed
 
 - Changed storing `Model` in Db rather `Dto` and setup `Dto` to `Model` mapping and vice versa with an extension on
   `Model`.
+
+### Fixed
+
 - Fixed `GraphQlApi` not working alone without any other Api.
 
 ## [3.0.0]
