@@ -1,12 +1,12 @@
 using System.Text;
 using KurzSharp.Templates.Models;
+using Microsoft.CodeAnalysis;
 
 namespace KurzSharp.Utils;
 
 public static class TemplatesUtils
 {
-    public const string PlaceholderTypeName = nameof(PlaceholderModel);
-    public const string PlaceholderDtoTypeName = nameof(PlaceholderModelDto);
+    private const string PlaceholderTypeName = nameof(PlaceholderModel);
 
     private static readonly string PlaceholderTypeCamelCase =
         PlaceholderTypeName.Substring(0, 1).ToLowerInvariant() + PlaceholderTypeName.Substring(1);
@@ -18,42 +18,28 @@ public static class TemplatesUtils
     /// Gets source code from embedded resource file under Templates
     /// </summary>
     /// <param name="fileName">Name of the embedded resource file without extension ex: MyTemplate</param>
-    /// <returns>Source code as string</returns>
-    public static string GetTemplateFileContent(string fileName) =>
-        GetFileContent($"{ProjectNamespace}.{TemplateNamespace}.{fileName}.cs");
-
-    /// <summary>
-    /// Gets source code from embedded resource file under Templates
-    /// </summary>
     /// <param name="fileTemplateDirectory">File directory under Templates directory</param>
-    /// <param name="fileName">Name of the embedded resource file without extension ex: MyTemplate</param>
     /// <param name="extension">File Extension ex: cs, js, proto</param>
     /// <returns>Source code as string</returns>
-    public static string
-        GetTemplateFileContent(string fileTemplateDirectory, string fileName, string extension = "cs") =>
+    public static string GetFileContent(string fileName, string fileTemplateDirectory = "", string extension = "cs")
+    {
         // NOTE:
         // Assumption 1: Templates are in valid directory based namespace
         // Assumption 2: Templates filenames are same as Type name
-        GetFileContent($"{ProjectNamespace}.{TemplateNamespace}.{fileTemplateDirectory}.{fileName}.{extension}");
+        var fullyQualifiedFileName =
+            $"{ProjectNamespace}.{TemplateNamespace}.{fileTemplateDirectory}.{fileName}.{extension}".Replace("..", ".");
 
-    /// <summary>
-    /// Gets source code from embedded resource file
-    /// </summary>
-    /// <param name="fullyQualifiedFileName">Name of the embedded resource file with namespace ex: MyProject.Templates.MyClass.cs</param>
-    /// <returns>Source code as string</returns>
-    /// <exception cref="InvalidOperationException">Throws when template file not found or empty</exception>
-    public static string GetFileContent(string fullyQualifiedFileName)
-    {
         using var stream = typeof(TemplatesUtils).Assembly.GetManifestResourceStream(fullyQualifiedFileName);
 
         if (stream is null)
         {
-            throw new InvalidOperationException($"Template file {fullyQualifiedFileName} not found");
+            throw new InvalidOperationException($"Template file {fullyQualifiedFileName} not found, stream null");
         }
 
-        using var reader = new StreamReader(stream, Encoding.UTF8);
+        var buffer = new byte[stream.Length];
+        _ = stream.Read(buffer, 0, buffer.Length);
 
-        var fileContent = reader.ReadToEnd();
+        var fileContent = Encoding.Default.GetString(buffer);
 
         if (string.IsNullOrWhiteSpace(fileContent))
         {
@@ -63,67 +49,34 @@ public static class TemplatesUtils
         return fileContent;
     }
 
-    /// <summary>
-    /// Replace `PlaceholderModel` references in Code with actual type
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="typeName">Type to be used to replace `PlaceholderModel`</param>
-    /// <returns></returns>
-    public static string ReplacePlaceholderType(this string source, string typeName)
+    public static string FixReferences(this string source, ModelSourceInfo sourceInfo)
     {
-        // NOTE: Doesn't work .netstandard2.0
-        // ReSharper disable once ReplaceSubstringWithRangeIndexer
+        var typeName = sourceInfo.TypeName;
         var typeCamelCase = typeName.Substring(0, 1).ToLowerInvariant() + typeName.Substring(1);
 
-        return source.Replace(PlaceholderTypeName, typeName)
+        return source
+            // Fixup Namespaces
+            .Replace($"{ProjectNamespace}.{TemplateNamespace}.Models", sourceInfo.TypeNamespace)
+            .Replace(".Templates.", ".")
+            .Replace($"{ProjectNamespace}.{TemplateNamespace}", ProjectNamespace)
+            // Fixup Placeholder types
+            .Replace(PlaceholderTypeName, typeName)
             .Replace(PlaceholderTypeCamelCase, typeCamelCase);
     }
 
     /// <summary>
-    /// Removes `.Templates` from Namespaces
+    /// Get <see cref="AttributeData"/> of a give Property and converts it into Attribute Syntax: [Attribute(Arg = Value)]
     /// </summary>
-    /// <param name="source"></param>
-    /// <param name="typeNamespace"></param>
+    /// <param name="propertySymbol"></param>
     /// <returns></returns>
-    public static string FixupNamespaces(this string source, string typeNamespace)
-    {
-        var modelsNamespace = typeNamespace.Contains("Models") ? typeNamespace : $"{typeNamespace}.Models";
-
-        return source.Replace($".{TemplateNamespace}", string.Empty)
-            .Replace($"{ProjectNamespace}.Models", modelsNamespace);
-    }
-
-    /// <summary>
-    /// Add Using Statements for given namespace if non-existent
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="typeNamespace">Namespace to add using statements for</param>
-    /// <returns></returns>
-    public static string AddUsing(this string source, string typeNamespace)
-    {
-        return source.AddUsing(new[] { typeNamespace });
-    }
-
-    /// <summary>
-    /// Add Using Statements for given namespaces if non-existent
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="typeNamespaces">Namespaces to add using statements for</param>
-    /// <returns></returns>
-    public static string AddUsing(this string source, IEnumerable<string> typeNamespaces)
-    {
-        foreach (var ns in typeNamespaces)
+    public static string GetPropAttrSrc(IPropertySymbol propertySymbol) =>
+        propertySymbol.GetAttributes().Aggregate("\n", (syntax, attributeData) =>
         {
-            var nsUsing = $"using {ns};";
+            var namedArgs = attributeData.NamedArguments.Select((namedArg) => $"{namedArg.Key}={namedArg.Value.Value}");
+            var constructorArgs = attributeData.ConstructorArguments.Select(b => b.Value?.ToString());
 
-            if (source.Contains(nsUsing))
-            {
-                continue;
-            }
+            var args = string.Join(", ", namedArgs.Concat(constructorArgs));
 
-            source = $"{nsUsing}\n{source}";
-        }
-
-        return source;
-    }
+            return syntax + $"[{attributeData.AttributeClass}({args})]";
+        });
 }

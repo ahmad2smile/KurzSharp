@@ -10,7 +10,6 @@ namespace KurzSharp.Templates.Models;
 #endif
 public class PlaceholderModelDto
 {
-    [DataMember(Order = 1)]
     public Guid PlaceholderId { get; set; }
 
 #if NET8_0_OR_GREATER

@@ -9,6 +9,7 @@ using KurzSharp.Templates.RestApi;
 using KurzSharp.Templates.Database;
 using KurzSharp.Templates.GraphQlApi;
 using KurzSharp.Templates.GrpcApi;
+using KurzSharp.Templates.Models;
 using KurzSharp.Templates.Services;
 
 namespace KurzSharp;
@@ -18,7 +19,37 @@ public class ApiSourceGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var incrementalValueProvider = DeclarationsUtils.CreateSyntaxProvider<ClassDeclarationSyntax>(context);
+        const string attributeOptionalPostfix = "Attribute";
+        var attrs = new[]
+        {
+            nameof(RestApiAttribute),
+            nameof(RestApiAttribute).Replace(attributeOptionalPostfix, string.Empty),
+            nameof(GrpcApiAttribute),
+            nameof(GrpcApiAttribute).Replace(attributeOptionalPostfix, string.Empty),
+            nameof(GraphQlApiAttribute),
+            nameof(GraphQlApiAttribute).Replace(attributeOptionalPostfix, string.Empty),
+        };
+
+        var classDeclarationsWithAttrsProvider = context.SyntaxProvider.CreateSyntaxProvider((node, _) =>
+                node is TypeDeclarationSyntax
+                {
+                    AttributeLists: { Count: >= 1 } attributes,
+                } &&
+                attributes.SelectMany(a => a.Attributes)
+                    .Any(a => attrs.Contains(a.Name.ToString())),
+            (syntaxContext, _) =>
+            {
+                var syntax = (ClassDeclarationSyntax)syntaxContext.Node;
+
+                // NOTE: Send through the actual Attribute to use some change Code Gen based on options take in Attr
+                // e.g: [MyCustomAttribute("myOption1")] // "myOption1" can be used with this
+                var attributes = syntax.AttributeLists.SelectMany(list => list.Attributes);
+
+                return (syntax, attributes);
+            });
+
+        var incrementalValueProvider =
+            context.CompilationProvider.Combine(classDeclarationsWithAttrsProvider.Collect());
 
         context.RegisterSourceOutput(incrementalValueProvider, Execute);
     }
@@ -50,140 +81,74 @@ public class ApiSourceGenerator : IIncrementalGenerator
             .ToList();
 
         AddServices(modelSourceInfos, ctx);
-
-        if (modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Rest)).ToList() is { Count: > 0 } rests)
-        {
-            AddController(rests, ctx);
-        }
-
-        if (modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.Grpc)).ToList() is { Count: > 0 } grpcs)
-        {
-            AddGrpc(grpcs, ctx);
-        }
-
-        if (modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.GraphQl)).ToList() is { Count: > 0 } graphqls)
-        {
-            AddGraphql(graphqls, ctx);
-        }
-
-        AddModelDto(modelSourceInfos, ctx);
-        AddModelExtensions(modelSourceInfos, ctx);
-        AddPartialModel(modelSourceInfos, ctx);
+        AddModels(modelSourceInfos, ctx);
         AddDbContext(modelSourceInfos, ctx);
         AddSetupExtension(modelSourceInfos, ctx);
     }
 
     private static void AddServices(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
-        var iServiceSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(IPlaceholderModelService));
-        var serviceSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(PlaceholderModelService));
+        if (modelSourceInfos.Count == 0)
+        {
+            throw new Exception("No model source info found.");
+        }
+
+        var iService = TemplatesUtils.GetFileContent(nameof(IPlaceholderModelService), "Services");
+        var service = TemplatesUtils.GetFileContent(nameof(PlaceholderModelService), "Services");
+        var controller = TemplatesUtils.GetFileContent(nameof(PlaceholderModelController), "RestApi");
+        var iServiceGrpc = TemplatesUtils.GetFileContent(nameof(IPlaceholderModelGrpcService), "GrpcApi");
+        var serviceGrpc = TemplatesUtils.GetFileContent(nameof(PlaceholderModelGrpcService), "GrpcApi");
+        var queryGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelQuery), "GraphQlApi");
+        var mutationGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelMutation), "GraphQlApi");
 
         foreach (var modelSourceInfo in modelSourceInfos)
         {
-            var typeName = modelSourceInfo.TypeName;
-            var typeNamespace = modelSourceInfo.TypeNamespace;
+            var typ = modelSourceInfo.TypeName;
 
-            var iService = iServiceSrc.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-            var service = serviceSrc.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
+            ctx.AddSource($"I{typ}Service.g.cs",
+                SourceText.From(iService.FixReferences(modelSourceInfo), Encoding.UTF8));
+            ctx.AddSource($"{typ}Service.g.cs", SourceText.From(service.FixReferences(modelSourceInfo), Encoding.UTF8));
 
-            ctx.AddSource($"I{typeName}Service.g.cs", SourceText.From(iService, Encoding.UTF8));
-            ctx.AddSource($"{typeName}Service.g.cs", SourceText.From(service, Encoding.UTF8));
+            if (modelSourceInfo.ApiKinds.Contains(ApiKind.Rest))
+            {
+                ctx.AddSource($"{typ}Controller.g.cs",
+                    SourceText.From(controller.FixReferences(modelSourceInfo), Encoding.UTF8));
+            }
+
+            if (modelSourceInfo.ApiKinds.Contains(ApiKind.Grpc))
+            {
+                ctx.AddSource($"I{typ}GrpcService.g.cs",
+                    SourceText.From(iServiceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+                ctx.AddSource($"{typ}GrpcService.g.cs",
+                    SourceText.From(serviceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+            }
+
+            if (modelSourceInfo.ApiKinds.Contains(ApiKind.GraphQl))
+            {
+                ctx.AddSource($"{modelSourceInfo.TypeName}Query.g.cs",
+                    SourceText.From(queryGraphQl.FixReferences(modelSourceInfo), Encoding.UTF8));
+                ctx.AddSource($"{modelSourceInfo.TypeName}Mutation.g.cs",
+                    SourceText.From(mutationGraphQl.FixReferences(modelSourceInfo), Encoding.UTF8));
+            }
         }
 
-        var serviceResultSrc = TemplatesUtils.GetTemplateFileContent("Services", nameof(ServiceResult<string>));
-        var serviceResult = serviceResultSrc.FixupNamespaces(modelSourceInfos.FirstOrDefault()?.TypeNamespace ??
-                                                             throw new InvalidOperationException(
-                                                                 $"No type namespace found {nameof(AddServices)}"));
-        ctx.AddSource($"ServiceResult.g.cs", SourceText.From(serviceResult, Encoding.UTF8));
+        var baseQuery = TemplatesUtils.GetFileContent(nameof(Query), "GraphQlApi")
+            .FixReferences(modelSourceInfos.First());
+
+        var baseMutation = TemplatesUtils.GetFileContent(nameof(Mutation), "GraphQlApi")
+            .FixReferences(modelSourceInfos.First());
+
+        ctx.AddSource("Query.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
+        ctx.AddSource("Mutation.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
     }
 
-    private static void AddController(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
+    private static void AddModels(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
-        var controllerSource =
-            TemplatesUtils.GetTemplateFileContent("RestApi", nameof(PlaceholderModelController));
-
         foreach (var modelSourceInfo in modelSourceInfos)
         {
             var typeName = modelSourceInfo.TypeName;
-            var typeNamespace = modelSourceInfo.TypeNamespace;
 
-            var source = controllerSource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-
-            ctx.AddSource($"{typeName}Controller.g.cs", SourceText.From(source, Encoding.UTF8));
-        }
-    }
-
-    private static void AddGrpc(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
-    {
-        var iServiceSource = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(IPlaceholderModelGrpcService));
-        var serviceSource = TemplatesUtils.GetTemplateFileContent("GrpcApi", nameof(PlaceholderModelGrpcService));
-
-        foreach (var modelSourceInfo in modelSourceInfos)
-        {
-            var typeName = modelSourceInfo.TypeName;
-            var typeNamespace = modelSourceInfo.TypeNamespace;
-
-
-            var iService = iServiceSource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-            var service = serviceSource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-
-            ctx.AddSource($"I{typeName}GrpcService.g.cs", SourceText.From(iService, Encoding.UTF8));
-            ctx.AddSource($"{typeName}GrpcService.g.cs", SourceText.From(service, Encoding.UTF8));
-        }
-    }
-
-    private static void AddGraphql(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
-    {
-        var modelQuerySource = TemplatesUtils.GetTemplateFileContent("GraphQlApi", nameof(PlaceholderModelQuery));
-        var modelMutationSource = TemplatesUtils.GetTemplateFileContent("GraphQlApi", nameof(PlaceholderModelMutation));
-
-        foreach (var modelSourceInfo in modelSourceInfos)
-        {
-            var typeName = modelSourceInfo.TypeName;
-            var typeNamespace = modelSourceInfo.TypeNamespace;
-
-            var modelQuery = modelQuerySource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-
-            var modelMutation = modelMutationSource.FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
-
-            ctx.AddSource($"{typeName}Query.g.cs", SourceText.From(modelQuery, Encoding.UTF8));
-            ctx.AddSource($"{typeName}Mutation.g.cs", SourceText.From(modelMutation, Encoding.UTF8));
-        }
-
-        var basesQuerySource = TemplatesUtils.GetTemplateFileContent("GraphQlApi", nameof(Query))
-            .FixupNamespaces(modelSourceInfos.FirstOrDefault()?.TypeNamespace ??
-                             throw new InvalidOperationException($"No type namespace in {nameof(AddGraphql)}."));
-
-        var basesMutationSource = TemplatesUtils.GetTemplateFileContent("GraphQlApi", nameof(Mutation))
-            .FixupNamespaces(modelSourceInfos.FirstOrDefault()?.TypeNamespace ??
-                             throw new InvalidOperationException($"No type namespace in {nameof(AddGraphql)}."));
-
-        ctx.AddSource("Query.g.cs", SourceText.From(basesQuerySource, Encoding.UTF8));
-        ctx.AddSource("Mutation.g.cs", SourceText.From(basesMutationSource, Encoding.UTF8));
-    }
-
-    private static void AddModelDto(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
-    {
-        foreach (var sourceInfo in modelSourceInfos)
-        {
-            var typeName = sourceInfo.TypeName;
-            var typeNamespace = sourceInfo.TypeNamespace;
-
-            var propSymbols = sourceInfo.NamedTypeSymbol
+            var propSymbols = modelSourceInfo.NamedTypeSymbol
                 .GetMembers()
                 .Where(s => s.Kind == SymbolKind.Property)
                 .Cast<IPropertySymbol>()
@@ -192,78 +157,25 @@ public class ApiSourceGenerator : IIncrementalGenerator
             var propsDeclarations = string.Join("\n", propSymbols
                 .Select((s, i) =>
                     $$"""
-                      {{GetPropertyAttributes(s.GetAttributes())}}
+                      {{TemplatesUtils.GetPropAttrSrc(s)}}
                       [DataMember(Order = {{i + 1}})]
                       {{s.DeclaredAccessibility.ToString().ToLower()}} {{s.Type}} {{s.Name}} { get; set; }
                       """));
 
-            var source = TemplatesUtils.GetTemplateFileContent("Models", TemplatesUtils.PlaceholderDtoTypeName)
-                .FixupNamespaces(typeNamespace)
-                .Replace("[DataMember(Order = 1)]\n", string.Empty)
+            var modelDto = TemplatesUtils.GetFileContent(nameof(PlaceholderModelDto), "Models")
                 .Replace("public Guid PlaceholderId { get; set; }", propsDeclarations)
                 .Replace("model.Id = PlaceholderId;",
                     string.Join("\n", propSymbols.Select(s => $"model.{s.Name} = {s.Name};\n")))
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
+                .FixReferences(modelSourceInfo);
 
-            var fileName = $"{TemplatesUtils.PlaceholderTypeName.ReplacePlaceholderType(typeName)}Dto";
-
-            ctx.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
-        }
-    }
-
-    private static string GetPropertyAttributes(ImmutableArray<AttributeData> attributes)
-    {
-        return attributes.Aggregate("\n", (syntax, attributeData) =>
-        {
-            var namedArgs = attributeData.NamedArguments.Select((namedArg) => $"{namedArg.Key}={namedArg.Value.Value}");
-            var constructorArgs = attributeData.ConstructorArguments.Select(b => b.Value?.ToString());
-
-            var args = string.Join(", ", namedArgs.Concat(constructorArgs));
-
-            return syntax + $"[{attributeData.AttributeClass}({args})]";
-        });
-    }
-
-    private static void AddModelExtensions(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
-    {
-        foreach (var sourceInfo in modelSourceInfos)
-        {
-            var typeName = sourceInfo.TypeName;
-            var typeNamespace = sourceInfo.TypeNamespace;
-
-            var propSymbols = sourceInfo.NamedTypeSymbol
-                .GetMembers()
-                .Where(s => s.Kind == SymbolKind.Property)
-                .Cast<IPropertySymbol>();
-
-            var source = TemplatesUtils
-                .GetTemplateFileContent("Models", $"{TemplatesUtils.PlaceholderTypeName}Extensions")
+            var modelExt = TemplatesUtils.GetFileContent(nameof(PlaceholderModelExtensions), "Models")
                 .Replace("dto.PlaceholderId = model.Id;",
                     string.Join("\n", propSymbols.Select(s => $"dto.{s.Name} = model.{s.Name};\n")))
-                .FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
+                .FixReferences(modelSourceInfo);
 
-            var fileName = TemplatesUtils.PlaceholderTypeName.ReplacePlaceholderType(typeName);
-
-            ctx.AddSource($"{fileName}Extensions.g.cs", SourceText.From(source, Encoding.UTF8));
-        }
-    }
-
-    private static void AddPartialModel(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
-    {
-        foreach (var modelSourceInfo in modelSourceInfos)
-        {
-            var typeName = modelSourceInfo.TypeName;
-            var typeNamespace = modelSourceInfo.TypeNamespace;
-
-            var source = TemplatesUtils
-                .GetTemplateFileContent("Models", TemplatesUtils.PlaceholderTypeName)
+            var modelSrc = TemplatesUtils.GetFileContent(nameof(PlaceholderModel), "Models")
                 .Replace("public Guid Id { get; set; }", string.Empty)
-                .FixupNamespaces(typeNamespace)
-                .ReplacePlaceholderType(typeName)
-                .AddUsing(typeNamespace);
+                .FixReferences(modelSourceInfo);
 
             // NOTE: Declared == Explicitly declared in source code, not compiler generated
             var hasDeclaredPublicCtor = modelSourceInfo.NamedTypeSymbol.InstanceConstructors.Any(x =>
@@ -271,43 +183,36 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
             if (!hasDeclaredPublicCtor)
             {
-                source = source.Replace("[JsonConstructor]\n    private", "[JsonConstructor]\n    public");
+                modelSrc = modelSrc.Replace("[JsonConstructor]\n    private", "[JsonConstructor]\n    public");
             }
 
-            var fileName = TemplatesUtils.PlaceholderTypeName.ReplacePlaceholderType(typeName);
-
-            ctx.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
+            ctx.AddSource($"{typeName}.g.cs", SourceText.From(modelSrc, Encoding.UTF8));
+            ctx.AddSource($"{typeName}Dto.g.cs", SourceText.From(modelDto, Encoding.UTF8));
+            ctx.AddSource($"{typeName}Extensions.g.cs", SourceText.From(modelExt, Encoding.UTF8));
         }
 
-        var hooksSource = TemplatesUtils.GetTemplateFileContent("Hooks", nameof(LifecycleHooks<string>));
+        var hooksSource = TemplatesUtils.GetFileContent(nameof(LifecycleHooks<string>), "Hooks");
         ctx.AddSource($"{nameof(LifecycleHooks<string>)}.g.cs", SourceText.From(hooksSource, Encoding.UTF8));
     }
 
     private static void AddDbContext(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
         const string dbContextName = nameof(KurzSharpDbContext);
+        const string placeholderTypeName = nameof(PlaceholderModel);
 
-        const string placeholderDbSet =
-            $"public DbSet<{TemplatesUtils.PlaceholderTypeName}> {TemplatesUtils.PlaceholderTypeName}s {{ get; set; }}";
+        const string placeholderDbSet = $"public DbSet<{placeholderTypeName}> {placeholderTypeName}s {{ get; set; }}";
 
-        var dbSets = string.Join("\n",
-            modelSourceInfos.Select(t => placeholderDbSet.ReplacePlaceholderType(t.TypeName)));
+        var dbSets = string.Join("\n", modelSourceInfos.Select(placeholderDbSet.FixReferences));
 
-        var source = TemplatesUtils.GetTemplateFileContent("Database", dbContextName)
-            .Replace(placeholderDbSet, dbSets)
-            // NOTE: Only the first namespace is used because only root namespace is required for this
-            .FixupNamespaces(modelSourceInfos.FirstOrDefault()?.TypeNamespace ??
-                             throw new InvalidOperationException($"No type namespace in {nameof(AddDbContext)}."))
-            .AddUsing(modelSourceInfos.Select(t => t.TypeNamespace));
+        var source = TemplatesUtils.GetFileContent(dbContextName, "Database").Replace(placeholderDbSet, dbSets);
+        source = modelSourceInfos.Aggregate(source, (acc, m) => acc.FixReferences(m));
 
         ctx.AddSource($"{dbContextName}.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 
     private static void AddSetupExtension(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
     {
-        const string extensionSetupFileName = nameof(KurzSharpSetupExtension);
-
-        var setupExtSource = TemplatesUtils.GetTemplateFileContent(extensionSetupFileName);
+        var setupExtSource = TemplatesUtils.GetFileContent(nameof(KurzSharpSetupExtension));
 
         var modelInstanceServices = modelSourceInfos.Aggregate(string.Empty,
             (acc, m) => acc + $"services.AddSingleton<{m.NamedTypeSymbol.Name}>();\n");
@@ -326,7 +231,6 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var graphqlMutations = modelSourceInfos.Where(i => i.ApiKinds.Contains(ApiKind.GraphQl))
             .Aggregate(string.Empty, (acc, m) => acc + $".AddTypeExtension<{m.TypeName}Mutation>()\n");
 
-
         var source = setupExtSource
             .Replace("REST_API", modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.Rest)) ? "true" : "false")
             .Replace("GRPC_API", modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.Grpc)) ? "true" : "false")
@@ -335,12 +239,9 @@ public class ApiSourceGenerator : IIncrementalGenerator
             .Replace("services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();", modelServices)
             .Replace(".AddTypeExtension<PlaceholderModelQuery>()", graphqlQueries)
             .Replace(".AddTypeExtension<PlaceholderModelMutation>()", graphqlMutations)
-            .Replace("builder.MapGrpcService<GrpcApi.PlaceholderModelGrpcService>();", mapGrpcServices)
-            // NOTE: Only the first namespace is used because only root namespace is required for this
-            .FixupNamespaces(modelSourceInfos.FirstOrDefault()?.TypeNamespace ??
-                             throw new InvalidOperationException($"No type namespace in {nameof(AddSetupExtension)}."))
-            .AddUsing(modelSourceInfos.Select(t => t.TypeNamespace));
+            .Replace("builder.MapGrpcService<GrpcApi.PlaceholderModelGrpcService>();", mapGrpcServices);
+        source = modelSourceInfos.Aggregate(source, (acc, m) => acc.FixReferences(m));
 
-        ctx.AddSource($"{extensionSetupFileName}.g.cs", SourceText.From(source, Encoding.UTF8));
+        ctx.AddSource($"{nameof(KurzSharpSetupExtension)}.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 }

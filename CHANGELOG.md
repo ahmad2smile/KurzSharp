@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed storing `Model` in Db rather `Dto` and setup `Dto` to `Model` mapping and vice versa with an extension on
   `Model`.
+- Fixed `GraphQlApi` not working alone without any other Api.
 
 ## [3.0.0]
 
