@@ -33,11 +33,13 @@ public partial class Product
 services.AddKurzSharp();
 ```
 
-For Database add relavent Db package for Entity Framework and configure `KurzSharp` similar way to Entity Framework config. (ex: PostgresDb):
+For Database add relavent Db package for Entity Framework and configure `KurzSharp` similar way to Entity Framework
+config. (ex: PostgresDb):
 
 ```csharp
 services.AddKurzSharp(o => o.UseNpgsql(configuration.GetConnectionString("ProductsDb")));
 ```
+
 Map Routes and Services:
 
 ```csharp
@@ -46,14 +48,15 @@ app.MapKurzSharpServices();
 
 🎉 You API is ready, Run project and open Swagger Docs.
 
-For GraphQl API open [Bana Cake Pop](https://chillicream.com/docs/bananacakepop) at [http://localhost:5114/graphql](http://localhost:5114/graphql)
+For GraphQl API open [Bana Cake Pop](https://chillicream.com/docs/bananacakepop)
+at [http://localhost:5114/graphql](http://localhost:5114/graphql)
 
 ![image](https://github.com/user-attachments/assets/6307e50f-da44-4ad0-aa5c-6976549afc39)
 
-For REST or Grpc API open [Swagger](https://swagger.io/) at [http://localhost:5114/swagger](http://localhost:5114/swagger)
+For REST or Grpc API open [Swagger](https://swagger.io/)
+at [http://localhost:5114/swagger](http://localhost:5114/swagger)
 
 ![image](https://github.com/ahmad2smile/KurzSharp/assets/6108922/221cc0a3-1673-4251-818b-3d9a0e856567)
-
 
 For more information please check `examples/TestApi`
 
@@ -97,4 +100,7 @@ public partial class Product
 
 ## How it works:
 
-When a `KurzSharp` attributes like `RestApi`, `GraphQlApi` or `GrpcApi` is added on some Model class, it creates a new `Dto` entity which has the same properties as the Model. This entity is used to store data through `Entity Framework Core` and is also sent over the wire through API. It also takes attributes from the properties and puts them on the `Dto`'s properties for example: `JsonIgnoreAttribute`.
+When a `KurzSharp` attributes like `RestApi`, `GraphQlApi` or `GrpcApi` is added on some Model class, it creates a new
+`Dto` entity which has the same properties as the Model. The `Model` is used to store data through
+`Entity Framework Core` and `Dto` is sent over the wire through API. It also takes attributes from the properties and
+puts them on the `Dto`'s properties for example: `JsonIgnoreAttribute`.
