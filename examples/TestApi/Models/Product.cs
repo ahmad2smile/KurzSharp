@@ -29,11 +29,11 @@ public partial class Product
         return dto;
     }
 
-    public override IQueryable<ProductDto> OnBeforeAllRead(IQueryable<ProductDto> dtos)
+    public override IQueryable<ProductDto> OnBeforeRead(IQueryable<ProductDto> dtos)
     {
         _logger.LogInformation("Before we read all... we must log here");
 
-        return base.OnBeforeAllRead(dtos);
+        return dtos;
     }
 
     public override ProductDto OnBeforeRead(ProductDto dto)

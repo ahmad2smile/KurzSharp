@@ -45,11 +45,11 @@ public class GrpcWithGrpcClientTests(TestApiServerFixture factory) : IClassFixtu
         afterUpdateDtos.Select(i => i.Id).ToList().Should().Contain(dataIds);
 
         // DELETE
-        await Task.WhenAll(data.Select(dto => client.DeleteProduct(dto, CancellationToken.None)));
+        await client.DeleteProducts(data, CancellationToken.None);
 
         var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(afterUpdateDtos);
+        afterDeletedRes.Select(d => d.Id).Should().NotContain(afterUpdateDtos.Select(d => d.Id));
     }
 
     private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)

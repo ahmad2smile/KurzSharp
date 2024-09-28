@@ -53,6 +53,18 @@ public static class TemplatesUtils
     {
         var typeName = sourceInfo.TypeName;
         var typeCamelCase = typeName.Substring(0, 1).ToLowerInvariant() + typeName.Substring(1);
+        var idProp =
+            sourceInfo.Properties.FirstOrDefault(p =>
+                p.Name.Contains("Id") || p.Name.Contains("Name") ||
+                p.Attributes.Any(a => a.AttributeClass?.Name.Contains("Key") ?? false)) ??
+            sourceInfo.Properties.FirstOrDefault();
+
+        if (idProp != null && !idProp.Type.Contains(nameof(Guid)))
+        {
+            // Fixup getById type
+            source = source.Replace("Guid id", $"{idProp.Type} id");
+            source = source.Replace("Guid Id", $"{idProp.Type} Id");
+        }
 
         return source
             // Fixup Namespaces
@@ -67,10 +79,10 @@ public static class TemplatesUtils
     /// <summary>
     /// Get <see cref="AttributeData"/> of a give Property and converts it into Attribute Syntax: [Attribute(Arg = Value)]
     /// </summary>
-    /// <param name="propertySymbol"></param>
+    /// <param name="modelProperty"></param>
     /// <returns></returns>
-    public static string GetPropAttrSrc(IPropertySymbol propertySymbol) =>
-        propertySymbol.GetAttributes().Aggregate("\n", (syntax, attributeData) =>
+    public static string GetPropAttrSrc(ModelProperty modelProperty) =>
+        modelProperty.Attributes.Aggregate("\n", (syntax, attributeData) =>
         {
             var namedArgs = attributeData.NamedArguments.Select((namedArg) => $"{namedArg.Key}={namedArg.Value.Value}");
             var constructorArgs = attributeData.ConstructorArguments.Select(b => b.Value?.ToString());

@@ -73,7 +73,14 @@ public class ApiSourceGenerator : IIncrementalGenerator
                 var typeName = syntax.Identifier.ToString();
                 var typeNamespace = symbol.ContainingNamespace.ToDisplayString();
 
-                return new ModelSourceInfo(typeName, typeNamespace, typeSymbol, attributes.ToList());
+                var props = typeSymbol.GetMembers()
+                    .Where(s => s.Kind == SymbolKind.Property)
+                    .Cast<IPropertySymbol>()
+                    .Select(p => new ModelProperty(p.Name, p.Type.ToString(),
+                        p.DeclaredAccessibility.ToString().ToLower(), p.GetAttributes()))
+                    .ToList();
+
+                return new ModelSourceInfo(typeName, typeNamespace, typeSymbol, attributes.ToList(), props);
             })
             .Where(m => m != null)
             .Cast<ModelSourceInfo>()
@@ -138,8 +145,16 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var baseMutation = TemplatesUtils.GetFileContent(nameof(Mutation), "GraphQlApi")
             .FixReferences(modelSourceInfos.First());
 
-        ctx.AddSource("Query.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
-        ctx.AddSource("Mutation.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
+        var graphQlExceptions = TemplatesUtils.GetFileContent(nameof(GraphQlExceptions), "GraphQlApi")
+            .FixReferences(modelSourceInfos.First());
+
+        var grpcIdRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi")
+            .FixReferences(modelSourceInfos.First());
+
+        ctx.AddSource($"{nameof(Query)}.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
+        ctx.AddSource($"{nameof(Mutation)}.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
+        ctx.AddSource($"{nameof(GraphQlExceptions)}.g.cs", SourceText.From(graphQlExceptions, Encoding.UTF8));
+        ctx.AddSource($"{nameof(IdRequest)}.g.cs", SourceText.From(grpcIdRequest, Encoding.UTF8));
     }
 
     private static void AddModels(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
@@ -148,29 +163,23 @@ public class ApiSourceGenerator : IIncrementalGenerator
         {
             var typeName = modelSourceInfo.TypeName;
 
-            var propSymbols = modelSourceInfo.NamedTypeSymbol
-                .GetMembers()
-                .Where(s => s.Kind == SymbolKind.Property)
-                .Cast<IPropertySymbol>()
-                .ToList();
-
-            var propsDeclarations = string.Join("\n", propSymbols
-                .Select((s, i) =>
+            var propsDeclarations = string.Join("\n", modelSourceInfo.Properties
+                .Select((p, i) =>
                     $$"""
-                      {{TemplatesUtils.GetPropAttrSrc(s)}}
+                      {{TemplatesUtils.GetPropAttrSrc(p)}}
                       [DataMember(Order = {{i + 1}})]
-                      {{s.DeclaredAccessibility.ToString().ToLower()}} {{s.Type}} {{s.Name}} { get; set; }
+                      {{p.AccessModifier}} {{p.Type}} {{p.Name}} { get; set; }
                       """));
 
             var modelDto = TemplatesUtils.GetFileContent(nameof(PlaceholderModelDto), "Models")
                 .Replace("public Guid PlaceholderId { get; set; }", propsDeclarations)
                 .Replace("model.Id = PlaceholderId;",
-                    string.Join("\n", propSymbols.Select(s => $"model.{s.Name} = {s.Name};\n")))
+                    string.Join("\n", modelSourceInfo.Properties.Select(s => $"model.{s.Name} = {s.Name};\n")))
                 .FixReferences(modelSourceInfo);
 
             var modelExt = TemplatesUtils.GetFileContent(nameof(PlaceholderModelExtensions), "Models")
                 .Replace("dto.PlaceholderId = model.Id;",
-                    string.Join("\n", propSymbols.Select(s => $"dto.{s.Name} = model.{s.Name};\n")))
+                    string.Join("\n", modelSourceInfo.Properties.Select(s => $"dto.{s.Name} = model.{s.Name};\n")))
                 .FixReferences(modelSourceInfo);
 
             var modelSrc = TemplatesUtils.GetFileContent(nameof(PlaceholderModel), "Models")

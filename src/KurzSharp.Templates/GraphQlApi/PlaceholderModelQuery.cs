@@ -19,6 +19,6 @@ public class PlaceholderModelQuery
     [UseFiltering]
     [UseSorting]
     public IQueryable<PlaceholderModelDto> GetPlaceholderModels(KurzSharpDbContext context,
-        [Service] PlaceholderModel model) => model.OnBeforeAllRead(context.PlaceholderModels.ToDtos());
+        [Service] PlaceholderModel model) => model.OnBeforeRead(context.PlaceholderModels.ToDtos());
 #endif
 }

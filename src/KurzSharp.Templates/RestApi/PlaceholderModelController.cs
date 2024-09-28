@@ -27,12 +27,17 @@ public partial class PlaceholderModelController : ControllerBase
         _placeholderModelService = placeholderModelService;
     }
 
-
-    [HttpGet]
-    public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetPlaceholderModel(Guid id, CancellationToken cancellationToken)
     {
-        return Ok(await _placeholderModelService.GetPlaceholderModels(cancellationToken));
+        var result = await _placeholderModelService.GetPlaceholderModel(id, cancellationToken);
+
+        return result is null ? NotFound(id) : Ok(result);
     }
+
+    [HttpGet($"/{nameof(PlaceholderModel)}Rest/bulk")]
+    public async Task<IActionResult> GetPlaceholderModels(CancellationToken cancellationToken) =>
+        Ok(await _placeholderModelService.GetPlaceholderModels(cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> AddPlaceholderModel([FromBody] PlaceholderModelDto placeholderModelDto,
@@ -45,9 +50,40 @@ public partial class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _placeholderModelService.AddPlaceholderModel(placeholderModelDto, cancellationToken);
+        try
+        {
+            var result = await _placeholderModelService.AddPlaceholderModel(placeholderModelDto, cancellationToken);
 
-        return Created(nameof(GetPlaceholderModels), result);
+            return Created(nameof(GetPlaceholderModels), result);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"Error occured while adding PlaceholderModel: {e.Message}");
+        }
+    }
+
+    [HttpPost($"/{nameof(PlaceholderModel)}Rest/bulk")]
+    public async Task<IActionResult> AddPlaceholderModels(
+        [FromBody] IEnumerable<PlaceholderModelDto> placeholderModelDtos,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            _logger.LogInformation("Invalid request to AddPlaceholderModels, {Issues}", ModelState);
+
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _placeholderModelService.AddPlaceholderModels(placeholderModelDtos, cancellationToken);
+
+            return Created(nameof(GetPlaceholderModels), result);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"Error occured while adding PlaceholderModels: {e.Message}");
+        }
     }
 
     [HttpDelete]
@@ -56,16 +92,35 @@ public partial class PlaceholderModelController : ControllerBase
     {
         try
         {
-            await _placeholderModelService.DeletePlaceholderModel(placeholderModelDto, cancellationToken);
+            var dto = await _placeholderModelService.DeletePlaceholderModel(placeholderModelDto, cancellationToken);
+
+            return Ok(dto);
         }
         catch (Exception e)
         {
             _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModelDto, e.Message);
 
-            return BadRequest($"Error while trying to delete {placeholderModelDto}");
+            return StatusCode(500, $"Error while trying to delete PlaceholderModel {e.Message}");
         }
+    }
 
-        return Ok(placeholderModelDto);
+    [HttpDelete($"/{nameof(PlaceholderModel)}Rest/bulk")]
+    public async Task<IActionResult> DeletePlaceholderModels(
+        [FromBody] IEnumerable<PlaceholderModelDto> placeholderModelDtos,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var dtos = await _placeholderModelService.DeletePlaceholderModels(placeholderModelDtos, cancellationToken);
+
+            return Ok(dtos);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModelDtos, e.Message);
+
+            return StatusCode(500, $"Error while trying to delete bulk PlaceholderModels: {e.Message}");
+        }
     }
 
     [HttpPut]
@@ -79,12 +134,44 @@ public partial class PlaceholderModelController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        await _placeholderModelService.UpdatePlaceholderModel(placeholderModelDto, cancellationToken);
+        try
+        {
+            await _placeholderModelService.UpdatePlaceholderModel(placeholderModelDto, cancellationToken);
 
-        return Ok(placeholderModelDto);
+            return Ok(placeholderModelDto);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"Error occured while updating PlaceholderModel: {e.Message}");
+        }
     }
 
+    [HttpPut($"/{nameof(PlaceholderModel)}Rest/bulk")]
+    public async Task<IActionResult> UpdatePlaceholderModels(
+        [FromBody] IEnumerable<PlaceholderModelDto> placeholderModelDtos,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            _logger.LogInformation("Invalid request to AddPlaceholderModels, {Issues}", ModelState);
+
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            await _placeholderModelService.UpdatePlaceholderModels(placeholderModelDtos, cancellationToken);
+
+            return Ok(placeholderModelDtos);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"Error occured while updating PlaceholderModels: {e.Message}");
+        }
+    }
 }
 #endif
 
-public partial class PlaceholderModelController {}
+public partial class PlaceholderModelController
+{
+}

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added "GetById" method which would get item matched on `id`, where `id` could be any property name which contains `Id`
+  or `Name`, or has `Key` Attribute.
+    - GET `/Product{Rest|Grpc}/{id|name|anyDbKey}`
+- Added new `API` methods for Bulk changes ex:
+    - POST `/Product{Rest|Grpc}/bulk` also relevant `GraphQl` method
+    - DELETE `/Product{Rest|Grpc}/bulk` also relevant `GraphQl` method
+    - PUT `/Product{Rest|Grpc}/bulk` also relevant `GraphQl` method
+- Added overload for `OnBeforeCreate` with `IEnumerable<TDto>` which would run on `bulk` method.
+- Added error handling in all `API`s.
+
+### Changed
+
+- Changed `HttpGet` at `/{ModelName}{Architechture}` ex: `/ProductRest` method to `/{ModelName}{Architechture}/bulk`.
+    - GET `/ProductGrpc/bulk`
+- Changed `OnBeforeAllRead` hook to `OnBeforeRead`.
+
 ## [3.1.1]
 
 ### Changed

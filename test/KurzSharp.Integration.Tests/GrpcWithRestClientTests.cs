@@ -65,14 +65,14 @@ public class GrpcWithRestClientTests(TestApiServerFixture factory) : IClassFixtu
 
         var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(updatedResults);
+        afterDeletedRes.Select(d => d.Id).Should().NotContain(updatedResults.Select(d => d.Id));
     }
 
     private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
     {
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync(BaseUrl);
+        var response = await client.GetAsync($"{BaseUrl}/bulk");
 
         var result = await response.Content.ReadFromJsonAsync<IList<ProductDto>>();
 

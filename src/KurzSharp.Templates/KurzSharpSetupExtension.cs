@@ -5,6 +5,7 @@ using KurzSharp.Templates.Database;
 #if GRAPHQL_API
 using KurzSharp.Templates.GraphQlApi;
 using HotChocolate.Data;
+using HotChocolate.Types;
 #endif
 using KurzSharp.Templates.Models;
 using KurzSharp.Templates.Services;
@@ -50,6 +51,7 @@ public static class KurzSharpSetupExtension
             .AddTypeExtension<PlaceholderModelQuery>()
             .AddMutationType<Mutation>()
             .AddTypeExtension<PlaceholderModelMutation>()
+            .AddMutationConventions()
             .AddFiltering()
             .AddSorting()
             .AddProjections();

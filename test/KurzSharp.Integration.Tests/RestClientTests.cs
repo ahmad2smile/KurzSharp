@@ -43,38 +43,35 @@ public class RestClientTests
             var dto = afterAddDtos[i];
             dto.Name = updatedData[i].Name;
             dto.Password = updatedData[i].Password;
-
-            await client.PutAsync(BaseUrl,
-                new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"));
         }
+
+        await client.PutAsync(BaseUrl,
+            new StringContent(JsonSerializer.Serialize(afterAddDtos), Encoding.UTF8, "application/json"));
 
         var afterUpdateDtos = await GetAll(dataIds);
 
         afterUpdateDtos.Select(i => i.Id).Should().Contain(dataIds);
 
         // DELETE
-        foreach (var dto in afterUpdateDtos)
+        var request = new HttpRequestMessage
         {
-            var request = new HttpRequestMessage
-            {
-                Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json"),
-                Method = HttpMethod.Delete,
-                RequestUri = new Uri(client.BaseAddress!, BaseUrl)
-            };
+            Content = new StringContent(JsonSerializer.Serialize(afterUpdateDtos), Encoding.UTF8, "application/json"),
+            Method = HttpMethod.Delete,
+            RequestUri = new Uri(client.BaseAddress!, $"{BaseUrl}/bulk")
+        };
 
-            await client.SendAsync(request);
-        }
+        await client.SendAsync(request);
 
         var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(afterUpdateDtos);
+        afterDeletedRes.Select(d => d.Id).Should().NotContain(afterUpdateDtos.Select(d => d.Id));
     }
 
     private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
     {
         var client = _factory.CreateClient();
 
-        var response = await client.GetAsync(BaseUrl);
+        var response = await client.GetAsync($"{BaseUrl}/bulk");
 
         var result = await response.Content.ReadFromJsonAsync<IList<ProductDto>>();
 

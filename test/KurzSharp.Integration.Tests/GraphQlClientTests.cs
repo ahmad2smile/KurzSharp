@@ -32,8 +32,11 @@ public class GraphQlClientTests
                 query = $$"""
                           mutation Mutation {
                             addProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
-                              id
-                              name
+                            product {
+                                id
+                                name
+                                password
+                              }
                             }
                           }
                           """
@@ -59,8 +62,11 @@ public class GraphQlClientTests
                 query = $$"""
                           mutation Mutation {
                             updateProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
-                              id
-                              name
+                            product {
+                                id
+                                name
+                                password
+                              }
                             }
                           }
                           """
@@ -82,8 +88,11 @@ public class GraphQlClientTests
                 query = $$"""
                           mutation Mutation {
                             deleteProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
-                              id
-                              name
+                            product {
+                                id
+                                name
+                                password
+                              }
                             }
                           }
                           """
@@ -95,7 +104,7 @@ public class GraphQlClientTests
 
         var afterDeletedRes = await GetAll(dataIds);
 
-        afterDeletedRes.Should().NotContain(updatedResults);
+        afterDeletedRes.Select(d => d.Id).Should().NotContain(updatedResults.Select(d => d.Id));
     }
 
     private async Task<IList<ProductDto>> GetAll(List<Guid> relatedIds)
