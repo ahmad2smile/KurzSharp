@@ -51,12 +51,14 @@ app.MapKurzSharpServices();
 For GraphQl API open [Bana Cake Pop](https://chillicream.com/docs/bananacakepop)
 at [http://localhost:5114/graphql](http://localhost:5114/graphql)
 
-![image](https://github.com/user-attachments/assets/6307e50f-da44-4ad0-aa5c-6976549afc39)
+![image](https://github.com/user-attachments/assets/54db1ac3-6d08-4945-8fc1-3db448080089)
+
 
 For REST or Grpc API open [Swagger](https://swagger.io/)
 at [http://localhost:5114/swagger](http://localhost:5114/swagger)
 
-![image](https://github.com/ahmad2smile/KurzSharp/assets/6108922/221cc0a3-1673-4251-818b-3d9a0e856567)
+![image](https://github.com/user-attachments/assets/ba23eaf3-dbbb-4775-a290-94871e7e6841)
+
 
 For more information please check `examples/TestApi`
 
@@ -64,11 +66,15 @@ For more information please check `examples/TestApi`
 
 - Hook into process to control how/what information on Entity is modified/observed with following hooks. Hook
   automatically attached the Model, just `override` the required ones.
-    - `OnBeforeCreate`
-    - `OnBeforeAllRead`
-    - `OnBeforeRead`
-    - `OnBeforeUpdate`
-    - `OnBeforeDelete`
+    - `TDto OnBeforeCreate(TDto dto)`
+    - `IEnumerable<TDto> OnBeforeCreate(IEnumerable<TDto> dtos)`
+    - `IQueryable<TDto> OnBeforeRead(IQueryable<TDto> dtos)`
+    - `TDto OnBeforeRead(TDto dto)`
+    - `TDto OnBeforeUpdate(TDto dto)`
+    - `Enumerable<TDto> OnBeforeUpdate(IEnumerable<TDto> dto)`
+    - `TDto OnBeforeDelete(TDto dto)`
+    - `IEnumerable<TDto> OnBeforeDelete(IEnumerable<TDto> dto)`
+
 
 Ex:
 
