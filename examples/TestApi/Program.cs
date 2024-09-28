@@ -1,29 +1,16 @@
 using KurzSharp;
 
 var builder = WebApplication.CreateBuilder(args);
-var services = builder.Services;
 
-services.AddControllers();
-services.AddEndpointsApiExplorer();
-services.AddKurzSharp();
-services.AddSwaggerGen();
+builder.Services.AddKurzSharp();
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.MapControllers();
 
 app.MapKurzSharpServices();
 
 app.Run();
 
+// NOTE: This is only required for Testing
 public partial class Program
 {
 }

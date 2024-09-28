@@ -34,6 +34,9 @@ public static class KurzSharpSetupExtension
 
 #if REST_API || GRPC_API
         services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
 #endif
 
 #if GRPC_API
@@ -53,10 +56,22 @@ public static class KurzSharpSetupExtension
 #endif
     }
 
-    public static void MapKurzSharpServices(this IEndpointRouteBuilder builder)
+    public static void MapKurzSharpServices(this WebApplication builder, bool mapSwaggerUi = true,
+        bool mapControllers = true)
     {
+#if REST_API || GRPC_API
+        if (mapSwaggerUi)
+        {
+            builder.UseSwagger();
+            builder.UseSwaggerUI();
+        }
+#endif
+
 #if REST_API
-        builder.MapControllers();
+        if (mapControllers)
+        {
+            builder.MapControllers();
+        }
 #endif
 
 #if GRPC_API
