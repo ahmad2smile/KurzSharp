@@ -31,7 +31,7 @@ public class GraphQlClientTests
             {
                 query = $$"""
                           mutation Mutation {
-                            addProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
+                            addProduct(input: { product: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" } }) {
                             product {
                                 id
                                 name
@@ -61,7 +61,7 @@ public class GraphQlClientTests
             {
                 query = $$"""
                           mutation Mutation {
-                            updateProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
+                            updateProduct(input: { product: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" } }) {
                             product {
                                 id
                                 name
@@ -87,7 +87,7 @@ public class GraphQlClientTests
             {
                 query = $$"""
                           mutation Mutation {
-                            deleteProduct(input: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" }) {
+                            deleteProduct(input: { product: { id: "{{dto.Id}}",  name: "{{dto.Name}}", password: "{{dto.Password}}" } }) {
                             product {
                                 id
                                 name

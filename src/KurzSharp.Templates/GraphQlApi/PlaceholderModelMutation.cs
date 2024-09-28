@@ -25,32 +25,30 @@ public class PlaceholderModelMutation
     }
 
     [Error(typeof(GraphQlExceptions.AddEntityException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(PlaceholderModelDto),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto input,
+    [UseMutationConvention(PayloadFieldName = "placeholderModel")]
+    public async Task<PlaceholderModelDto> AddPlaceholderModel(PlaceholderModelDto placeholderModel,
         CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.AddPlaceholderModel(input, cancellationToken);
+            return await _placeholderModelService.AddPlaceholderModel(placeholderModel, cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError("Error while adding {@Entity}, {Message}", input, e.Message);
+            _logger.LogError("Error while adding {@Entity}, {Message}", placeholderModel, e.Message);
 
             throw new GraphQlExceptions.AddEntityException(e.Message);
         }
     }
 
     [Error(typeof(GraphQlExceptions.AddEntitiesException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(IEnumerable<PlaceholderModelDto>),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<IEnumerable<PlaceholderModelDto>> AddPlaceholderModels(IEnumerable<PlaceholderModelDto> input,
-        CancellationToken cancellationToken)
+    [UseMutationConvention(PayloadFieldName = "placeholderModels")]
+    public async Task<IEnumerable<PlaceholderModelDto>> AddPlaceholderModels(
+        IEnumerable<PlaceholderModelDto> placeholderModels, CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.AddPlaceholderModels(input, cancellationToken);
+            return await _placeholderModelService.AddPlaceholderModels(placeholderModels, cancellationToken);
         }
         catch (Exception e)
         {
@@ -61,32 +59,30 @@ public class PlaceholderModelMutation
     }
 
     [Error(typeof(GraphQlExceptions.DeleteEntityException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(PlaceholderModelDto),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<PlaceholderModelDto> DeletePlaceholderModel(PlaceholderModelDto input,
+    [UseMutationConvention(PayloadFieldName = "placeholderModel")]
+    public async Task<PlaceholderModelDto> DeletePlaceholderModel(PlaceholderModelDto placeholderModel,
         CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.DeletePlaceholderModel(input, cancellationToken);
+            return await _placeholderModelService.DeletePlaceholderModel(placeholderModel, cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError("Error while deleting {@Entity}, {Message}", input, e.Message);
+            _logger.LogError("Error while deleting {@Entity}, {Message}", placeholderModel, e.Message);
 
             throw new GraphQlExceptions.DeleteEntityException(e.Message);
         }
     }
 
     [Error(typeof(GraphQlExceptions.DeleteEntitiesException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(IEnumerable<PlaceholderModelDto>),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<IEnumerable<PlaceholderModelDto>> DeletePlaceholderModels(IEnumerable<PlaceholderModelDto> input,
-        CancellationToken cancellationToken)
+    [UseMutationConvention(PayloadFieldName = "placeholderModels")]
+    public async Task<IEnumerable<PlaceholderModelDto>> DeletePlaceholderModels(
+        IEnumerable<PlaceholderModelDto> placeholderModels, CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.DeletePlaceholderModels(input, cancellationToken);
+            return await _placeholderModelService.DeletePlaceholderModels(placeholderModels, cancellationToken);
         }
         catch (Exception e)
         {
@@ -97,32 +93,30 @@ public class PlaceholderModelMutation
     }
 
     [Error(typeof(GraphQlExceptions.UpdateEntityException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(PlaceholderModelDto),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<PlaceholderModelDto> UpdatePlaceholderModel(PlaceholderModelDto input,
+    [UseMutationConvention(PayloadFieldName = "placeholderModel")]
+    public async Task<PlaceholderModelDto> UpdatePlaceholderModel(PlaceholderModelDto placeholderModel,
         CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.UpdatePlaceholderModel(input, cancellationToken);
+            return await _placeholderModelService.UpdatePlaceholderModel(placeholderModel, cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError("Error while update {@Entity}, {Message}", input, e.Message);
+            _logger.LogError("Error while update {@Entity}, {Message}", placeholderModel, e.Message);
 
             throw new GraphQlExceptions.UpdateEntityException(e.Message);
         }
     }
 
     [Error(typeof(GraphQlExceptions.UpdateEntitiesException))]
-    [UseMutationConvention(InputArgumentName = "input", InputTypeName = nameof(IEnumerable<PlaceholderModelDto>),
-        PayloadFieldName = "placeholderModel")]
-    public async Task<IEnumerable<PlaceholderModelDto>> UpdatePlaceholderModels(IEnumerable<PlaceholderModelDto> input,
-        CancellationToken cancellationToken)
+    [UseMutationConvention(PayloadFieldName = "placeholderModels")]
+    public async Task<IEnumerable<PlaceholderModelDto>> UpdatePlaceholderModels(
+        IEnumerable<PlaceholderModelDto> placeholderModels, CancellationToken cancellationToken)
     {
         try
         {
-            return await _placeholderModelService.UpdatePlaceholderModels(input, cancellationToken);
+            return await _placeholderModelService.UpdatePlaceholderModels(placeholderModels, cancellationToken);
         }
         catch (Exception e)
         {
