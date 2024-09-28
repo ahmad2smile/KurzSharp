@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Internal
+
+- Fixed build by disabling `OpenApiGenerateDocumentsOnBuild` for SourceGen projects.
+
 ### Added
 
 - Added "GetById" method which would get item matched on `id`, where `id` could be any property name which contains `Id`

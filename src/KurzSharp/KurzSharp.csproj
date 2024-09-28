@@ -11,6 +11,7 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
     </PropertyGroup>
 
     <ItemGroup>

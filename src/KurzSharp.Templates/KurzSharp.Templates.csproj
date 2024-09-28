@@ -8,8 +8,9 @@
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
         <DefineConstants Condition="true">REST_API GRPC_API GRAPHQL_API</DefineConstants>
+        <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
     </PropertyGroup>
-
+    
     <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
         <PackageReference Include="Microsoft.AspNetCore.Metadata" Version="8.*" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.*"/>
