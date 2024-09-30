@@ -3,18 +3,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace KurzSharp.Utils;
 
-public class ModelProperty(
-    string name,
-    string type,
-    string accessModifier,
-    IReadOnlyCollection<AttributeData> attributes)
-{
-    public string Name { get; } = name;
-    public string Type { get; } = type;
-    public string AccessModifier { get; } = accessModifier;
-    public IReadOnlyCollection<AttributeData> Attributes { get; } = attributes;
-}
-
 public class ModelSourceInfo(
     string typeName,
     string typeNamespace,
@@ -38,6 +26,7 @@ public class ModelSourceInfo(
                 nameof(RestApiAttribute) => ApiKind.Rest,
                 nameof(GrpcApiAttribute) => ApiKind.Grpc,
                 nameof(GraphQlApiAttribute) => ApiKind.GraphQl,
+                nameof(AdminDashboardAttribute) => ApiKind.AdminDashboard,
                 _ => throw new ArgumentException($"Unknown ApiKind: {attributeSyntax.Name.ToString()}")
             };
         }).ToList();

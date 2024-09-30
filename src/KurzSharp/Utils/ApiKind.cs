@@ -4,5 +4,6 @@ public enum ApiKind
 {
     Rest,
     Grpc,
-    GraphQl
+    GraphQl,
+    AdminDashboard
 }

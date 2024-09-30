@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using KurzSharp.Templates;
+using KurzSharp.Templates.AdminDashboard;
 using KurzSharp.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -28,6 +29,8 @@ public class ApiSourceGenerator : IIncrementalGenerator
             nameof(GrpcApiAttribute).Replace(attributeOptionalPostfix, string.Empty),
             nameof(GraphQlApiAttribute),
             nameof(GraphQlApiAttribute).Replace(attributeOptionalPostfix, string.Empty),
+            nameof(AdminDashboardAttribute),
+            nameof(AdminDashboardAttribute).Replace(attributeOptionalPostfix, string.Empty),
         };
 
         var classDeclarationsWithAttrsProvider = context.SyntaxProvider.CreateSyntaxProvider((node, _) =>
@@ -76,7 +79,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
                 var props = typeSymbol.GetMembers()
                     .Where(s => s.Kind == SymbolKind.Property)
                     .Cast<IPropertySymbol>()
-                    .Select(p => new ModelProperty(p.Name, p.Type.ToString(),
+                    .Select(p => new ModelProperty(p.Name, p.Type.ToString()!,
                         p.DeclaredAccessibility.ToString().ToLower(), p.GetAttributes()))
                     .ToList();
 
@@ -85,9 +88,10 @@ public class ApiSourceGenerator : IIncrementalGenerator
             .Where(m => m != null)
             .Cast<ModelSourceInfo>()
             .ToImmutableHashSet()
-            .ToList();
+            .ToArray();
 
         AddServices(modelSourceInfos, ctx);
+        AddAdminDashboard(modelSourceInfos.Where(m => m.ApiKinds.Contains(ApiKind.AdminDashboard)).ToArray(), ctx);
         AddModels(modelSourceInfos, ctx);
         AddDbContext(modelSourceInfos, ctx);
         AddSetupExtension(modelSourceInfos, ctx);
@@ -97,7 +101,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
     {
         if (modelSourceInfos.Count == 0)
         {
-            throw new Exception("No model source info found.");
+            return;
         }
 
         var iService = TemplatesUtils.GetFileContent(nameof(IPlaceholderModelService), "Services");
@@ -139,22 +143,74 @@ public class ApiSourceGenerator : IIncrementalGenerator
             }
         }
 
+        var firstModelSource = modelSourceInfos.First();
+
         var baseQuery = TemplatesUtils.GetFileContent(nameof(Query), "GraphQlApi")
-            .FixReferences(modelSourceInfos.First());
+            .FixReferences(firstModelSource);
 
         var baseMutation = TemplatesUtils.GetFileContent(nameof(Mutation), "GraphQlApi")
-            .FixReferences(modelSourceInfos.First());
+            .FixReferences(firstModelSource);
 
         var graphQlExceptions = TemplatesUtils.GetFileContent(nameof(GraphQlExceptions), "GraphQlApi")
-            .FixReferences(modelSourceInfos.First());
+            .FixReferences(firstModelSource);
 
         var grpcIdRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi")
-            .FixReferences(modelSourceInfos.First());
+            .FixReferences(firstModelSource);
 
         ctx.AddSource($"{nameof(Query)}.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
         ctx.AddSource($"{nameof(Mutation)}.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
         ctx.AddSource($"{nameof(GraphQlExceptions)}.g.cs", SourceText.From(graphQlExceptions, Encoding.UTF8));
         ctx.AddSource($"{nameof(IdRequest)}.g.cs", SourceText.From(grpcIdRequest, Encoding.UTF8));
+    }
+
+    private static void AddAdminDashboard(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
+    {
+        if (modelSourceInfos.Count == 0)
+        {
+            return;
+        }
+
+        var placeholderModelComponent =
+            TemplatesUtils.GetFileContent(nameof(PlaceholderModelComponent), "AdminDashboard");
+
+        foreach (var modelSourceInfo in modelSourceInfos)
+        {
+            var typ = modelSourceInfo.TypeName;
+
+            var modelComponentSrc = placeholderModelComponent.Replace(
+                "AddColumn(nameof(PlaceholderModel.Id), \"Id\", columnsBuilder, ref seq2);",
+                modelSourceInfo.Properties.Aggregate(string.Empty,
+                    (x, p) => x +
+                              $"AddColumn(nameof(PlaceholderModel.{p.Name}), \"{p.Name}\", columnsBuilder, ref seq2)\n;"));
+
+            ctx.AddSource($"{typ}Component.g.cs",
+                SourceText.From(modelComponentSrc.FixReferences(modelSourceInfo), Encoding.UTF8));
+        }
+
+        var firstModelSource = modelSourceInfos.First();
+
+        var appComponent = TemplatesUtils.GetFileContent(nameof(AppComponent), "AdminDashboard")
+            .FixReferences(firstModelSource);
+        var homeComponent = TemplatesUtils.GetFileContent(nameof(HomeComponent), "AdminDashboard")
+            .FixReferences(firstModelSource);
+        var mainLayout = TemplatesUtils.GetFileContent(nameof(MainLayout), "AdminDashboard")
+            .FixReferences(firstModelSource);
+        var routesComponent = TemplatesUtils.GetFileContent(nameof(RoutesComponent), "AdminDashboard")
+            .FixReferences(firstModelSource);
+
+        var navMenuComponent = TemplatesUtils.GetFileContent(nameof(NavMenuComponent), "AdminDashboard")
+            .Replace("CreateNavLink(builder2, \"placeholderModel\", \"PlaceHolderModel\");",
+                modelSourceInfos.Aggregate(string.Empty,
+                    (current, i) =>
+                        current +
+                        $"CreateNavLink(builder2, \"{i.TypeName.ToCamelCase()}s\", \"{i.TypeName}s\");\n"))
+            .FixReferences(firstModelSource);
+
+        ctx.AddSource($"{nameof(AppComponent)}.g.cs", SourceText.From(appComponent, Encoding.UTF8));
+        ctx.AddSource($"{nameof(HomeComponent)}.g.cs", SourceText.From(homeComponent, Encoding.UTF8));
+        ctx.AddSource($"{nameof(MainLayout)}.g.cs", SourceText.From(mainLayout, Encoding.UTF8));
+        ctx.AddSource($"{nameof(NavMenuComponent)}.g.cs", SourceText.From(navMenuComponent, Encoding.UTF8));
+        ctx.AddSource($"{nameof(RoutesComponent)}.g.cs", SourceText.From(routesComponent, Encoding.UTF8));
     }
 
     private static void AddModels(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
@@ -244,6 +300,8 @@ public class ApiSourceGenerator : IIncrementalGenerator
             .Replace("REST_API", modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.Rest)) ? "true" : "false")
             .Replace("GRPC_API", modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.Grpc)) ? "true" : "false")
             .Replace("GRAPHQL_API", modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.GraphQl)) ? "true" : "false")
+            .Replace("ADMIN_DASHBOARD",
+                modelSourceInfos.Any(i => i.ApiKinds.Contains(ApiKind.AdminDashboard)) ? "true" : "false")
             .Replace("services.AddTransient<PlaceholderModel>();", modelInstanceServices)
             .Replace("services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();", modelServices)
             .Replace(".AddTypeExtension<PlaceholderModelQuery>()", graphqlQueries)

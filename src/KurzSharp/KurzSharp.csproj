@@ -29,6 +29,9 @@
         <PackageReference Include="HotChocolate.AspNetCore" Version="13.*" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.*" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
+        <PackageReference Include="Radzen.Blazor" Version="5.*" />
+        <PackageReference Include="MudBlazor" Version="7.*"/>
+        <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="2.*"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -55,6 +58,10 @@
     <ItemGroup>
         <ProjectReference Include="..\KurzSharp.EmbeddedSource\KurzSharp.EmbeddedSource.csproj" PrivateAssets="All"/>
         <ProjectReference Include="..\KurzSharp.Templates\KurzSharp.Templates.csproj" PrivateAssets="All"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Update="..\KurzSharp.Templates\Dashboard" />
     </ItemGroup>
 
 </Project>

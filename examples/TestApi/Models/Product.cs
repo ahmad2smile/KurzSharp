@@ -7,6 +7,7 @@ namespace TestApi.Models;
 [RestApi]
 [GrpcApi]
 [GraphQlApi]
+[AdminDashboard]
 public partial class Product
 {
     private readonly ILogger<Product> _logger;

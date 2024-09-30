@@ -6,13 +6,15 @@ namespace KurzSharp.Utils;
 
 public static class TemplatesUtils
 {
-    private const string PlaceholderTypeName = nameof(PlaceholderModel);
-
-    private static readonly string PlaceholderTypeCamelCase =
-        PlaceholderTypeName.Substring(0, 1).ToLowerInvariant() + PlaceholderTypeName.Substring(1);
-
     private const string ProjectNamespace = "KurzSharp";
     private const string TemplateNamespace = "Templates";
+
+    public static string ToCamelCase(this string value) =>
+        // NOTE: Disable for netstandard2.0
+        // ReSharper disable file ReplaceSubstringWithRangeIndexer
+#pragma warning disable CA1845
+        value.Substring(0, 1).ToLowerInvariant() + value.Substring(1);
+#pragma warning restore CA1845
 
     /// <summary>
     /// Gets source code from embedded resource file under Templates
@@ -72,8 +74,8 @@ public static class TemplatesUtils
             .Replace(".Templates.", ".")
             .Replace($"{ProjectNamespace}.{TemplateNamespace}", ProjectNamespace)
             // Fixup Placeholder types
-            .Replace(PlaceholderTypeName, typeName)
-            .Replace(PlaceholderTypeCamelCase, typeCamelCase);
+            .Replace(nameof(PlaceholderModel), typeName)
+            .Replace(nameof(PlaceholderModel).ToCamelCase(), typeCamelCase);
     }
 
     /// <summary>

@@ -7,7 +7,7 @@
         <RootNamespace>KurzSharp</RootNamespace>
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
-        <DefineConstants Condition="true">REST_API GRPC_API GRAPHQL_API</DefineConstants>
+        <DefineConstants Condition="true">REST_API GRPC_API GRAPHQL_API ADMIN_DASHBOARD</DefineConstants>
         <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
     </PropertyGroup>
     
@@ -22,6 +22,9 @@
         <PackageReference Include="HotChocolate" Version="13.*" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.*" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
+        <PackageReference Include="Radzen.Blazor" Version="5.*" />
+        <PackageReference Include="MudBlazor" Version="7.*"/>
+        <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="2.*"/>
     </ItemGroup>
 
 </Project>

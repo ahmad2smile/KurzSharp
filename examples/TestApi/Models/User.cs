@@ -4,6 +4,7 @@ namespace TestApi.Models;
 
 [GrpcApi]
 [GraphQlApi]
+[AdminDashboard]
 public partial class User
 {
     public Guid Id { get; set; }

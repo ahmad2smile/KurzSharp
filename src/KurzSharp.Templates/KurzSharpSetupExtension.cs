@@ -12,6 +12,13 @@ using KurzSharp.Templates.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Query = KurzSharp.Templates.GraphQlApi.Query;
+#if ADMIN_DASHBOARD
+using KurzSharp.Templates.AdminDashboard;
+using Radzen;
+using MudBlazor.Services;
+#endif
+
 #endif
 
 // NOTE: Do not change namespace as it's referenced by string in `RestApiSourceGenerator`
@@ -32,6 +39,15 @@ public static class KurzSharpSetupExtension
         // DI requested Deps in the model constructor ex: Logger.
         services.AddTransient<PlaceholderModel>();
         services.AddPooledDbContextFactory<KurzSharpDbContext>(optionsAction);
+        services.AddScoped<KurzSharpDbContext>(p =>
+            p.GetRequiredService<IDbContextFactory<KurzSharpDbContext>>().CreateDbContext());
+
+#if ADMIN_DASHBOARD
+        services.AddMudServices();
+        services.AddRazorComponents()
+            .AddInteractiveServerComponents();
+        services.AddRadzenComponents();
+#endif
 
 #if REST_API || GRPC_API
         services.AddScoped<IPlaceholderModelService, PlaceholderModelService>();
@@ -82,6 +98,12 @@ public static class KurzSharpSetupExtension
 
 #if GRAPHQL_API
         builder.MapGraphQL();
+#endif
+#if ADMIN_DASHBOARD
+        builder.UseAntiforgery();
+        builder.UseStaticFiles();
+        builder.MapRazorComponents<AppComponent>()
+            .AddInteractiveServerRenderMode();
 #endif
     }
 #endif
