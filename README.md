@@ -11,6 +11,10 @@ Easily scaffold non-production APIs in any or all of following Architectures:
 2. Grpc (Code First [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc))
 3. REST ([ASP.NET Core Controllers](https://learn.microsoft.com/en-us/aspnet/core/web-api))
 
+and Explore Data with:
+
+AdminDashboard (using [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor), [Radzen Table](https://github.com/radzenhq/radzen-blazor) and [MudBlazor](https://github.com/MudBlazor/MudBlazor/) UI)
+
 Minimum required dotnet version: [.NET8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
 ## Usage
@@ -21,6 +25,7 @@ Minimum required dotnet version: [.NET8](https://dotnet.microsoft.com/en-us/down
 [GrpcApi] // Whicherver is desired
 [RestApi]
 [GraphQlApi]
+[AdminDashboard]
 public partial class Product
 {
     public Guid Id { get; set; }
@@ -58,6 +63,10 @@ For REST or Grpc API open [Swagger](https://swagger.io/)
 at [http://localhost:5114/swagger](http://localhost:5114/swagger)
 
 ![image](https://github.com/user-attachments/assets/ba23eaf3-dbbb-4775-a290-94871e7e6841)
+
+For Admin Dashboard UI open [http://localhost:5114/KurzSharp/](http://localhost:5114/KurzSharp/) or sub page with `/{EntityName}s`.
+
+![image](https://github.com/user-attachments/assets/3e8ebca0-dd5e-4d4f-8d10-4480dbfc88ae)
 
 
 For more information please check `examples/TestApi`
