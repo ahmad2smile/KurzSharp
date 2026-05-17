@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -19,8 +19,8 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
-        <PackageReference Include="Microsoft.AspNetCore.Metadata" Version="8.*" PrivateAssets="all"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.*"/>
+        <PackageReference Include="Microsoft.AspNetCore.Metadata" Version="10.*" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.*"/>
         <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.*"/>
         <PackageReference Include="protobuf-net.Grpc.ClientFactory" Version="1.*"/>
         <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.*" />

@@ -15,7 +15,7 @@ and Explore Data with:
 
 AdminDashboard (using [Blazor](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor), [Radzen Table](https://github.com/radzenhq/radzen-blazor) and [MudBlazor](https://github.com/MudBlazor/MudBlazor/) UI)
 
-Minimum required dotnet version: [.NET8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+Minimum required dotnet version: [.NET10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 
 ## Usage
 

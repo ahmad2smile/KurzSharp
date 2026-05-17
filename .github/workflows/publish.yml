@@ -14,11 +14,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v3
+        uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '10.x'
         env:
           NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
 
