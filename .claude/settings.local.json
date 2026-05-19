@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(dotnet *)",
+      "Bash(curl -s \"https://api.nuget.org/v3-flatcontainer/system.security.cryptography.xml/10.0.8/system.security.cryptography.xml.nuspec\")"
+    ]
+  }
+}
