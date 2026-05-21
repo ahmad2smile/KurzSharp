@@ -3,7 +3,7 @@ name: NuGet Publish
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 jobs:
   nuget-publish:
@@ -18,7 +18,7 @@ jobs:
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          dotnet-version: "10.x"
         env:
           NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
 
@@ -42,7 +42,13 @@ jobs:
       - name: Create the package
         run: dotnet pack --configuration Release src/KurzSharp /p:Version=$(git describe --tags)
 
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ahmad2smile
+
       - name: Publish the package
         run: |
-          dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
+          dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
           dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/ahmad2smile/index.json
