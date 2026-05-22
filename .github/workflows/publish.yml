@@ -53,25 +53,3 @@ jobs:
         run: |
           dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
           dotnet nuget push "src/KurzSharp/bin/Release/*.nupkg" --skip-duplicate --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/ahmad2smile/index.json
-
-      - name: List published package on NuGet.org
-        run: |
-          PACKAGE_ID="KurzSharp"
-          VERSION=$(git describe --tags)
-
-          echo "Waiting for $PACKAGE_ID $VERSION to finish validation on NuGet.org..."
-          for i in $(seq 1 30); do
-            if curl -sf "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID}/index.json" 2>/dev/null | jq -e --arg v "$VERSION" '.versions | index($v)' >/dev/null 2>&1; then
-              echo "Package is available."
-              break
-            fi
-            echo "Attempt $i/30: not yet available, waiting 30s..."
-            sleep 30
-          done
-
-          echo "Relisting $PACKAGE_ID $VERSION..."
-          curl -X POST \
-            -H "X-NuGet-ApiKey: ${{ steps.login.outputs.NUGET_API_KEY }}" \
-            --fail --show-error --silent \
-            "https://www.nuget.org/api/v2/package/${PACKAGE_ID}/${VERSION}"
-          echo "Done."
