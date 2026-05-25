@@ -45,6 +45,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AdditionalFiles Include="AnalyzerReleases.Shipped.md"/>
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Include="..\KurzSharp.Templates\**\*.cs" Link="Templates\%(RecursiveDir)%(FileName)%(Extension)"/>
         <EmbeddedResource Remove="..\KurzSharp.Templates\obj\**"/>
     </ItemGroup>

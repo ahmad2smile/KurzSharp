@@ -4,6 +4,7 @@ using KurzSharp.Templates;
 using KurzSharp.Templates.AdminDashboard;
 using KurzSharp.Utils;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using KurzSharp.Templates.RestApi;
@@ -63,32 +64,60 @@ public class ApiSourceGenerator : IIncrementalGenerator
     {
         var (compilation, classDeclarationsWithAttrs) = arg2;
 
-        var modelSourceInfos = classDeclarationsWithAttrs.Select(attr =>
+        var modelSourceInfos = new List<ModelSourceInfo>();
+        // NOTE: A partial type split across files yields multiple syntax nodes for the same symbol;
+        // dedupe so we don't generate (and collide on) the same hint name twice.
+        var seenTypes = new HashSet<string>();
+
+        foreach (var (syntax, attributes) in classDeclarationsWithAttrs)
+        {
+            var symbol = compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax);
+
+            if (symbol is not INamedTypeSymbol typeSymbol)
             {
-                var (syntax, attributes) = attr;
-                var symbol = compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax);
+                continue;
+            }
 
-                if (symbol is not INamedTypeSymbol typeSymbol)
-                {
-                    return null;
-                }
+            if (!syntax.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                ctx.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ModelMustBePartial,
+                    syntax.Identifier.GetLocation(), syntax.Identifier.ToString()));
+                continue;
+            }
 
-                var typeName = syntax.Identifier.ToString();
-                var typeNamespace = symbol.ContainingNamespace.ToDisplayString();
+            if (!seenTypes.Add(typeSymbol.ToDisplayString()))
+            {
+                continue;
+            }
 
-                var props = typeSymbol.GetMembers()
-                    .Where(s => s.Kind == SymbolKind.Property)
-                    .Cast<IPropertySymbol>()
-                    .Select(p => new ModelProperty(p.Name, p.Type.ToString()!,
-                        p.DeclaredAccessibility.ToString().ToLower(), p.GetAttributes()))
-                    .ToList();
+            var typeName = syntax.Identifier.ToString();
+            var typeNamespace = symbol.ContainingNamespace.ToDisplayString();
 
-                return new ModelSourceInfo(typeName, typeNamespace, typeSymbol, attributes.ToList(), props);
-            })
-            .Where(m => m != null)
-            .Cast<ModelSourceInfo>()
-            .ToImmutableHashSet()
-            .ToArray();
+            var props = typeSymbol.GetMembers()
+                .Where(s => s.Kind == SymbolKind.Property)
+                .Cast<IPropertySymbol>()
+                .Select(p => new ModelProperty(p.Name, p.Type.ToString()!,
+                    p.DeclaredAccessibility.ToString().ToLower(), p.GetAttributes()))
+                .ToList();
+
+            if (props.Count == 0)
+            {
+                ctx.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ModelMustHaveProperties,
+                    syntax.Identifier.GetLocation(), syntax.Identifier.ToString()));
+                continue;
+            }
+
+            // Without a conventional EF Core key the entity has no primary key and EF throws at
+            // runtime; warn so it's caught at build time (a partial KurzSharpDbContext can still
+            // configure the key manually). Uses the same resolution as the generated lookup code.
+            if (ModelSourceInfo.FindConventionalKey(typeName, props) is null)
+            {
+                ctx.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ModelMissingKey,
+                    syntax.Identifier.GetLocation(), typeName));
+            }
+
+            modelSourceInfos.Add(new ModelSourceInfo(typeName, typeNamespace, typeSymbol, attributes.ToList(), props));
+        }
 
         AddServices(modelSourceInfos, ctx);
         AddAdminDashboard(modelSourceInfos.Where(m => m.ApiKinds.Contains(ApiKind.AdminDashboard)).ToArray(), ctx);
@@ -109,6 +138,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var controller = TemplatesUtils.GetFileContent(nameof(PlaceholderModelController), "RestApi");
         var iServiceGrpc = TemplatesUtils.GetFileContent(nameof(IPlaceholderModelGrpcService), "GrpcApi");
         var serviceGrpc = TemplatesUtils.GetFileContent(nameof(PlaceholderModelGrpcService), "GrpcApi");
+        var idRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi");
         var queryGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelQuery), "GraphQlApi");
         var mutationGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelMutation), "GraphQlApi");
 
@@ -128,10 +158,19 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
             if (modelSourceInfo.ApiKinds.Contains(ApiKind.Grpc))
             {
+                // Each model gets its own id-request type keyed to its own key type. A single shared
+                // IdRequest would be typed from one model and break others with a different key type.
+                var idRequestType = $"{typ}IdRequest";
+
                 ctx.AddSource($"I{typ}GrpcService.g.cs",
-                    SourceText.From(iServiceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+                    SourceText.From(iServiceGrpc.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
                 ctx.AddSource($"{typ}GrpcService.g.cs",
-                    SourceText.From(serviceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+                    SourceText.From(serviceGrpc.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
+                ctx.AddSource($"{idRequestType}.g.cs",
+                    SourceText.From(idRequest.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
             }
 
             if (modelSourceInfo.ApiKinds.Contains(ApiKind.GraphQl))
@@ -154,13 +193,9 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var graphQlExceptions = TemplatesUtils.GetFileContent(nameof(GraphQlExceptions), "GraphQlApi")
             .FixReferences(firstModelSource);
 
-        var grpcIdRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi")
-            .FixReferences(firstModelSource);
-
         ctx.AddSource($"{nameof(Query)}.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
         ctx.AddSource($"{nameof(Mutation)}.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
         ctx.AddSource($"{nameof(GraphQlExceptions)}.g.cs", SourceText.From(graphQlExceptions, Encoding.UTF8));
-        ctx.AddSource($"{nameof(IdRequest)}.g.cs", SourceText.From(grpcIdRequest, Encoding.UTF8));
     }
 
     private static void AddAdminDashboard(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
@@ -233,23 +268,35 @@ public class ApiSourceGenerator : IIncrementalGenerator
                     string.Join("\n", modelSourceInfo.Properties.Select(s => $"model.{s.Name} = {s.Name};\n")))
                 .FixReferences(modelSourceInfo);
 
+            var projection = string.Join(", ",
+                modelSourceInfo.Properties.Select(p => $"{p.Name} = m.{p.Name}"));
+
             var modelExt = TemplatesUtils.GetFileContent(nameof(PlaceholderModelExtensions), "Models")
                 .Replace("dto.PlaceholderId = model.Id;",
                     string.Join("\n", modelSourceInfo.Properties.Select(s => $"dto.{s.Name} = model.{s.Name};\n")))
+                // EF Core cannot translate a method-call projection (m.ToDto()); use an object
+                // initializer so the projection is translated to SQL for IQueryable sources.
+                .Replace("m => m.ToDto()", $"m => new PlaceholderModelDto {{ {projection} }}")
                 .FixReferences(modelSourceInfo);
 
             var modelSrc = TemplatesUtils.GetFileContent(nameof(PlaceholderModel), "Models")
-                .Replace("public Guid Id { get; set; }", string.Empty)
-                .FixReferences(modelSourceInfo);
+                .Replace("public Guid Id { get; set; }", string.Empty);
 
-            // NOTE: Declared == Explicitly declared in source code, not compiler generated
-            var hasDeclaredPublicCtor = modelSourceInfo.NamedTypeSymbol.InstanceConstructors.Any(x =>
-                !x.IsImplicitlyDeclared && x.DeclaredAccessibility == Accessibility.Public);
+            // NOTE: Declared == Explicitly declared in source code, not compiler generated.
+            // If the user already declares a parameterless constructor, drop the generated one to
+            // avoid a duplicate-constructor compile error. Otherwise keep the public
+            // [JsonConstructor] so EF Core, the DTO `ToModel()` mapping and System.Text.Json can
+            // all instantiate the model.
+            var hasUserParameterlessCtor = modelSourceInfo.NamedTypeSymbol.InstanceConstructors.Any(x =>
+                !x.IsImplicitlyDeclared && x.Parameters.Length == 0);
 
-            if (!hasDeclaredPublicCtor)
+            if (hasUserParameterlessCtor)
             {
-                modelSrc = modelSrc.Replace("[JsonConstructor]\n    private", "[JsonConstructor]\n    public");
+                modelSrc = modelSrc.Replace("[JsonConstructor]\n    public PlaceholderModel()\n    {\n    }",
+                    string.Empty);
             }
+
+            modelSrc = modelSrc.FixReferences(modelSourceInfo);
 
             ctx.AddSource($"{typeName}.g.cs", SourceText.From(modelSrc, Encoding.UTF8));
             ctx.AddSource($"{typeName}Dto.g.cs", SourceText.From(modelDto, Encoding.UTF8));
@@ -279,8 +326,10 @@ public class ApiSourceGenerator : IIncrementalGenerator
     {
         var setupExtSource = TemplatesUtils.GetFileContent(nameof(KurzSharpSetupExtension));
 
+        // NOTE: Models host the lifecycle hooks and may carry per-request mutable state, so they
+        // must not be shared across requests; register them Scoped rather than Singleton.
         var modelInstanceServices = modelSourceInfos.Aggregate(string.Empty,
-            (acc, m) => acc + $"services.AddSingleton<{m.NamedTypeSymbol.Name}>();\n");
+            (acc, m) => acc + $"services.AddScoped<{m.NamedTypeSymbol.Name}>();\n");
 
         var modelServices = modelSourceInfos.Aggregate(string.Empty,
             (acc, m) => acc +

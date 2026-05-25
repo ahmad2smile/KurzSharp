@@ -54,7 +54,7 @@ public partial class PlaceholderModelController : ControllerBase
         {
             var result = await _placeholderModelService.AddPlaceholderModel(placeholderModelDto, cancellationToken);
 
-            return Created(nameof(GetPlaceholderModels), result);
+            return CreatedAtAction(nameof(GetPlaceholderModels), result);
         }
         catch (Exception e)
         {
@@ -78,7 +78,7 @@ public partial class PlaceholderModelController : ControllerBase
         {
             var result = await _placeholderModelService.AddPlaceholderModels(placeholderModelDtos, cancellationToken);
 
-            return Created(nameof(GetPlaceholderModels), result);
+            return CreatedAtAction(nameof(GetPlaceholderModels), result);
         }
         catch (Exception e)
         {

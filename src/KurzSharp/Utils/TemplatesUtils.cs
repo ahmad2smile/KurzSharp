@@ -48,24 +48,34 @@ public static class TemplatesUtils
             throw new InvalidOperationException($"Template file {fullyQualifiedFileName} is empty");
         }
 
-        return fileContent;
+        // Normalize line endings so multi-line string replacements (e.g. removing the generated
+        // constructor) match regardless of how the generator's sources were checked out.
+        return fileContent.Replace("\r\n", "\n");
     }
 
     public static string FixReferences(this string source, ModelSourceInfo sourceInfo)
     {
         var typeName = sourceInfo.TypeName;
         var typeCamelCase = typeName.Substring(0, 1).ToLowerInvariant() + typeName.Substring(1);
-        var idProp =
-            sourceInfo.Properties.FirstOrDefault(p =>
-                p.Name.Contains("Id") || p.Name.Contains("Name") ||
-                p.Attributes.Any(a => a.AttributeClass?.Name.Contains("Key") ?? false)) ??
-            sourceInfo.Properties.FirstOrDefault();
+        var key = sourceInfo.KeyProperty;
 
-        if (idProp != null && !idProp.Type.Contains(nameof(Guid)))
+        if (key != null)
         {
-            // Fixup getById type
-            source = source.Replace("Guid id", $"{idProp.Type} id");
-            source = source.Replace("Guid Id", $"{idProp.Type} Id");
+            if (!key.Type.Contains(nameof(Guid)))
+            {
+                // Retype the get-by-id parameter and the gRPC id wrapper to the model's key type.
+                // Target the specific declarations rather than a blind `Guid id`/`Guid Id` substring
+                // replace, which would corrupt unrelated Guid-typed properties (e.g. a property named
+                // `Id` or `identifier`).
+                source = source.Replace("GetPlaceholderModel(Guid id", $"GetPlaceholderModel({key.Type} id");
+                source = source.Replace("public Guid Id { get; set; }", $"public {key.Type} Id {{ get; set; }}");
+            }
+
+            if (key.Name != "Id")
+            {
+                // The generated lookup hardcodes `m.Id`; point it at the actual key property.
+                source = source.Replace("m.Id == id", $"m.{key.Name} == id");
+            }
         }
 
         return source
