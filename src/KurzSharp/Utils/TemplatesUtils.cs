@@ -55,17 +55,22 @@ public static class TemplatesUtils
     {
         var typeName = sourceInfo.TypeName;
         var typeCamelCase = typeName.Substring(0, 1).ToLowerInvariant() + typeName.Substring(1);
-        var idProp =
-            sourceInfo.Properties.FirstOrDefault(p =>
-                p.Name.Contains("Id") || p.Name.Contains("Name") ||
-                p.Attributes.Any(a => a.AttributeClass?.Name.Contains("Key") ?? false)) ??
-            sourceInfo.Properties.FirstOrDefault();
+        var key = sourceInfo.KeyProperty;
 
-        if (idProp != null && !idProp.Type.Contains(nameof(Guid)))
+        if (key != null)
         {
-            // Fixup getById type
-            source = source.Replace("Guid id", $"{idProp.Type} id");
-            source = source.Replace("Guid Id", $"{idProp.Type} Id");
+            if (!key.Type.Contains(nameof(Guid)))
+            {
+                // Fixup getById parameter type to match the model's key type.
+                source = source.Replace("Guid id", $"{key.Type} id");
+                source = source.Replace("Guid Id", $"{key.Type} Id");
+            }
+
+            if (key.Name != "Id")
+            {
+                // The generated lookup hardcodes `m.Id`; point it at the actual key property.
+                source = source.Replace("m.Id == id", $"m.{key.Name} == id");
+            }
         }
 
         return source

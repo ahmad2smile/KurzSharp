@@ -39,24 +39,24 @@ public partial class Product
 
     public override ProductDto OnBeforeRead(ProductDto dto)
     {
-        Password = string.Empty;
-        Console.WriteLine($"Reading {nameof(Product)} with Id: {Id}");
+        dto.Password = string.Empty;
+        Console.WriteLine($"Reading {nameof(Product)} with Id: {dto.Id}");
 
         return base.OnBeforeRead(dto);
     }
 
     public override ProductDto OnBeforeDelete(ProductDto dto)
     {
-        Console.WriteLine($"Deleting {nameof(Product)} with Id: {Id}");
+        Console.WriteLine($"Deleting {nameof(Product)} with Id: {dto.Id}");
 
         return dto;
     }
 
     public override ProductDto OnBeforeUpdate(ProductDto dto)
     {
-        if (!Name.Contains("Mr/Ms"))
+        if (!dto.Name.Contains("Mr/Ms"))
         {
-            Name = $"Mr/Ms {Name}";
+            dto.Name = $"Mr/Ms {dto.Name}";
         }
 
         return dto;
