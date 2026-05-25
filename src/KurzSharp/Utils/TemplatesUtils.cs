@@ -48,7 +48,9 @@ public static class TemplatesUtils
             throw new InvalidOperationException($"Template file {fullyQualifiedFileName} is empty");
         }
 
-        return fileContent;
+        // Normalize line endings so multi-line string replacements (e.g. removing the generated
+        // constructor) match regardless of how the generator's sources were checked out.
+        return fileContent.Replace("\r\n", "\n");
     }
 
     public static string FixReferences(this string source, ModelSourceInfo sourceInfo)
@@ -61,9 +63,12 @@ public static class TemplatesUtils
         {
             if (!key.Type.Contains(nameof(Guid)))
             {
-                // Fixup getById parameter type to match the model's key type.
-                source = source.Replace("Guid id", $"{key.Type} id");
-                source = source.Replace("Guid Id", $"{key.Type} Id");
+                // Retype the get-by-id parameter and the gRPC id wrapper to the model's key type.
+                // Target the specific declarations rather than a blind `Guid id`/`Guid Id` substring
+                // replace, which would corrupt unrelated Guid-typed properties (e.g. a property named
+                // `Id` or `identifier`).
+                source = source.Replace("GetPlaceholderModel(Guid id", $"GetPlaceholderModel({key.Type} id");
+                source = source.Replace("public Guid Id { get; set; }", $"public {key.Type} Id {{ get; set; }}");
             }
 
             if (key.Name != "Id")
