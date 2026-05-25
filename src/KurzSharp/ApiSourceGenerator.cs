@@ -107,14 +107,10 @@ public class ApiSourceGenerator : IIncrementalGenerator
                 continue;
             }
 
-            // EF Core's primary-key convention is a property named 'Id' or '<Type>Id', or a [Key]
-            // attribute. Without one, the entity has no key and EF throws at runtime; warn so it's
-            // caught at build time (a partial KurzSharpDbContext can still configure the key manually).
-            var hasKey = props.Any(p => p.Attributes.Any(a => a.AttributeClass?.Name == "KeyAttribute")) ||
-                         props.Any(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase)) ||
-                         props.Any(p => string.Equals(p.Name, $"{typeName}Id", StringComparison.OrdinalIgnoreCase));
-
-            if (!hasKey)
+            // Without a conventional EF Core key the entity has no primary key and EF throws at
+            // runtime; warn so it's caught at build time (a partial KurzSharpDbContext can still
+            // configure the key manually). Uses the same resolution as the generated lookup code.
+            if (ModelSourceInfo.FindConventionalKey(typeName, props) is null)
             {
                 ctx.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ModelMissingKey,
                     syntax.Identifier.GetLocation(), typeName));
