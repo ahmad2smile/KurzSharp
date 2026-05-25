@@ -21,4 +21,12 @@ public static class DiagnosticDescriptors
         Category,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ModelMissingKey = new(
+        "KS003",
+        "KurzSharp model has no primary key",
+        "Type '{0}' has no '[Key]' property, no 'Id' property and no '{0}Id' property. EF Core will fail to determine a primary key at runtime. Add one of these, or configure the key in a partial KurzSharpDbContext.",
+        Category,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 }

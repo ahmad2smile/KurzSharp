@@ -107,6 +107,19 @@ public class ApiSourceGenerator : IIncrementalGenerator
                 continue;
             }
 
+            // EF Core's primary-key convention is a property named 'Id' or '<Type>Id', or a [Key]
+            // attribute. Without one, the entity has no key and EF throws at runtime; warn so it's
+            // caught at build time (a partial KurzSharpDbContext can still configure the key manually).
+            var hasKey = props.Any(p => p.Attributes.Any(a => a.AttributeClass?.Name == "KeyAttribute")) ||
+                         props.Any(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase)) ||
+                         props.Any(p => string.Equals(p.Name, $"{typeName}Id", StringComparison.OrdinalIgnoreCase));
+
+            if (!hasKey)
+            {
+                ctx.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ModelMissingKey,
+                    syntax.Identifier.GetLocation(), typeName));
+            }
+
             modelSourceInfos.Add(new ModelSourceInfo(typeName, typeNamespace, typeSymbol, attributes.ToList(), props));
         }
 
@@ -129,6 +142,7 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var controller = TemplatesUtils.GetFileContent(nameof(PlaceholderModelController), "RestApi");
         var iServiceGrpc = TemplatesUtils.GetFileContent(nameof(IPlaceholderModelGrpcService), "GrpcApi");
         var serviceGrpc = TemplatesUtils.GetFileContent(nameof(PlaceholderModelGrpcService), "GrpcApi");
+        var idRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi");
         var queryGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelQuery), "GraphQlApi");
         var mutationGraphQl = TemplatesUtils.GetFileContent(nameof(PlaceholderModelMutation), "GraphQlApi");
 
@@ -148,10 +162,19 @@ public class ApiSourceGenerator : IIncrementalGenerator
 
             if (modelSourceInfo.ApiKinds.Contains(ApiKind.Grpc))
             {
+                // Each model gets its own id-request type keyed to its own key type. A single shared
+                // IdRequest would be typed from one model and break others with a different key type.
+                var idRequestType = $"{typ}IdRequest";
+
                 ctx.AddSource($"I{typ}GrpcService.g.cs",
-                    SourceText.From(iServiceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+                    SourceText.From(iServiceGrpc.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
                 ctx.AddSource($"{typ}GrpcService.g.cs",
-                    SourceText.From(serviceGrpc.FixReferences(modelSourceInfo), Encoding.UTF8));
+                    SourceText.From(serviceGrpc.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
+                ctx.AddSource($"{idRequestType}.g.cs",
+                    SourceText.From(idRequest.FixReferences(modelSourceInfo).Replace(nameof(IdRequest), idRequestType),
+                        Encoding.UTF8));
             }
 
             if (modelSourceInfo.ApiKinds.Contains(ApiKind.GraphQl))
@@ -174,13 +197,9 @@ public class ApiSourceGenerator : IIncrementalGenerator
         var graphQlExceptions = TemplatesUtils.GetFileContent(nameof(GraphQlExceptions), "GraphQlApi")
             .FixReferences(firstModelSource);
 
-        var grpcIdRequest = TemplatesUtils.GetFileContent(nameof(IdRequest), "GrpcApi")
-            .FixReferences(firstModelSource);
-
         ctx.AddSource($"{nameof(Query)}.g.cs", SourceText.From(baseQuery, Encoding.UTF8));
         ctx.AddSource($"{nameof(Mutation)}.g.cs", SourceText.From(baseMutation, Encoding.UTF8));
         ctx.AddSource($"{nameof(GraphQlExceptions)}.g.cs", SourceText.From(graphQlExceptions, Encoding.UTF8));
-        ctx.AddSource($"{nameof(IdRequest)}.g.cs", SourceText.From(grpcIdRequest, Encoding.UTF8));
     }
 
     private static void AddAdminDashboard(IList<ModelSourceInfo> modelSourceInfos, SourceProductionContext ctx)
